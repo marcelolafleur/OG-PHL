@@ -2851,7 +2851,7 @@
             0.0
         ]
     ],
-    "nu": 0.4,
+    "nu": 0.2,
     "SS_root_method": "hybr",
     "FOC_root_method": "hybr",
     "maxiter": 250,
