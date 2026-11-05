@@ -95,7 +95,7 @@ def test_payroll_rate_matches_ssc_collections(packaged):
     revenue in the model equals actual SSC revenue as a share of GDP."""
     labor_share = 1.0 - packaged["gamma"][0] - packaged["gamma_g"][0]
     expected = OECD_SSC / labor_share
-    assert packaged["tau_payroll"][0] == pytest.approx(expected, abs=5e-4)
+    assert packaged["tau_payroll"][0][0] == pytest.approx(expected, abs=5e-4)
 
 
 def test_frac_tax_payroll_is_the_reporting_split(packaged):

@@ -47,7 +47,7 @@ dependencies = [
     "statsmodels",
     "linearmodels",
     "linecheck",
-    "ogcore>=0.18.0",
+    "ogcore>=0.24.1",
 ]
 
 [project.urls]

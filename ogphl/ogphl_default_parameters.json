@@ -1254,7 +1254,9 @@
         0.0035
     ],
     "tau_payroll": [
-        0.0675
+        [
+            0.0675
+        ]
     ],
     "chi_b": [
         80.0,
@@ -2808,7 +2810,11 @@
     "tau_p": 0.0,
     "indR": 0.0,
     "k_ret": 0.0,
-    "alpha_db": 0.0,
+    "alpha_db": [
+        [
+            0.0
+        ]
+    ],
     "vpoint": 0.0,
     "yr_contrib": 40,
     "avg_earn_num_years": 35,
