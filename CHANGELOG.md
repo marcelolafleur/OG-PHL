@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The example no longer makes live data calls. It used to re-download UN demographics, re-derive the earnings profile and refresh World Bank `g_y_annual` whenever the machine was online, so online and offline runs of the same commit could give different results. The packaged JSON is now the whole calibration; `python -m ogphl.update_baseline` is the one deliberate way to refresh the API-sourced values, as a reviewable change to the JSON. The README describes both, and drops the UN token note that no longer applies.
+- Requires ogcore 0.24.1 (a released version; the lock previously pointed at a local patched build). `tau_payroll` and `alpha_db` use the nested T x J forms ogcore now requires (values unchanged). The single-industry base sets `nu = 0.2` to go with its Anderson transition solver, matching the multisector overlay.
+- `ogphl/targets.py` holds the steady-state dashboard targets, each with its source, and computes the matching model moments from a solved `SS_vars.pkl` (the pattern from OG-ZAF).
 - Enabled the anchored Anderson accelerator for the multi-industry transition path: the overlay now sets `TPI_outer_method = "anderson"` (an ogcore 0.16.4 parameter). Anderson extrapolates the damped `nu`-step from the residual history, so it complements — not replaces — the overlay's calibrated `nu = 0.2`: at that value the baseline transition converges in 25 outer iterations, while at the OG-Core default `nu = 0.4` the accelerator spends the run in trust-region resets (70 iterations on the baseline) and the reform transition stalls before the iteration cap. Verified end to end through the packaged example (baseline + reform: steady state unchanged, transition RC errors 0.0045, reform responses matching the damped run).
 
 ### Fixed

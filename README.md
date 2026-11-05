@@ -93,7 +93,7 @@ uv run python examples/run_og_phl.py
 
 #### What happens
 
-The first `uv run` creates the project environment if it does not exist yet — downloading a compatible Python interpreter if needed and installing the exact locked dependencies — and then runs the example. Early in the run you may be asked for a UN API token; just press return, and the model reads the same population data from a public mirror and continues. A full baseline-plus-reform run takes from 35 minutes to more than two hours; when it finishes, its plots and tables are saved under `./examples/OG-PHL-Example/` (see the list of outputs below).
+The first `uv run` creates the project environment if it does not exist yet — downloading a compatible Python interpreter if needed and installing the exact locked dependencies — and then runs the example. A full baseline-plus-reform run takes from 35 minutes to more than two hours; when it finishes, its plots and tables are saved under `./examples/OG-PHL-Example/` (see the list of outputs below).
 
 ### Installing for development or contributing
 
@@ -126,17 +126,16 @@ Note that, depending on your machine, a full model run (solving for the full tim
 
 If you run into errors running the example script, please open a new issue in the OG-PHL repo with a description of the issue and any relevant tracebacks you receive.
 
-Once the package is installed, one can adjust parameters in the OG-Core `Specifications` object using the `Calibration` class as follows:
+The calibration is the packaged parameter file, `ogphl/ogphl_default_parameters.json`. The example loads it and makes no live data calls, so a run gives the same results online or offline. To change a parameter for your own run, update the `Specifications` object after loading the file, the way the example sets up its reform:
 
 ```
-from ogcore.parameters import Specifications
-from ogphl.calibrate import Calibration
-from ogphl.utils import is_connected
-p = Specifications()
-if is_connected():
-    c = Calibration(p, update_from_api=True)
-    updated_params = c.get_dict()
-    p.update_specifications(updated_params)
+p.update_specifications({"cit_rate": [[0.20]]})
+```
+
+A few values come from public data services: the UN population data, the earnings profile derived from it, and World Bank growth (`g_y_annual`). To refresh them, run the following from the repository root, then review the changes to the parameter file before committing them:
+
+```
+uv run python -m ogphl.update_baseline
 ```
 
 ## Disclaimer

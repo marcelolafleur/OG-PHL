@@ -13,8 +13,6 @@ from ogcore import output_tables as ot
 from ogcore import output_plots as op
 from ogcore.execute import runner
 from ogcore.utils import safe_read_pickle
-from ogphl.calibrate import Calibration
-from ogphl.utils import is_connected
 
 # Use a custom matplotlib style file for plots
 plt.style.use("ogcore.OGcorePlots")
@@ -52,11 +50,11 @@ def main():
     ) as file:
         defaults = json.load(file)
     p.update_specifications(defaults)
-    # Update parameters from calibrate.py Calibration class
-    if is_connected():  # only update if connected to internet
-        c = Calibration(p, update_from_api=True)
-        updated_params = c.get_dict()
-        p.update_specifications(updated_params)
+    # The packaged JSON is the calibration: the run makes no live data calls,
+    # so online and offline runs of the same commit give the same results.
+    # To refresh the API-sourced values (UN demographics, the earnings
+    # profile, World Bank g_y_annual), run `python -m ogphl.update_baseline`,
+    # review the diff of the JSON, and commit it.
 
     # Run model
     start_time = time.time()
