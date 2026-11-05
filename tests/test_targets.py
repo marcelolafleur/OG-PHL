@@ -23,6 +23,7 @@ SS_KEYS = [
     "D",
     "D_f",
     "TR",
+    "agg_pension_outlays",
     "K_f",
     "K",
     "RM",

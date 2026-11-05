@@ -93,6 +93,7 @@ def ss_moments(ss):
         "G/Y": sc("G") / Y,
         "TR/Y": sc("TR") / Y,
         "I_g/Y": sc("I_g") / Y,
+        "pensions/Y": sc("agg_pension_outlays") / Y,
         "K_f/K": sc("K_f") / sc("K"),
         "RM/Y": sc("RM") / Y,
         "NX/Y": nx / Y,

@@ -13,7 +13,11 @@ The default value for the intertemporal elasticity of substitution, $\sigma$, is
 
 ### Rate of time preference
 
-We take our default value for the rate of time preference parameter, $\beta$ from {cite}`Carroll:2009`.  We set the value to $\beta=0.96$ (on an annual basis).
+The rate of time preference $\beta$ is tuned rather than sourced: it is the one parameter that sets how much Philippine households save, and so how much capital the economy holds. We set $\beta=0.8667$ (annual, the same for every lifetime-income group) so that the steady state's private capital-output ratio equals the data: 3.59, the Penn World Table 11 total capital stock for 2023 (3.97 times GDP) less public capital of about 0.38 times GDP (IMF Investment and Capital Stock Dataset). With the foreign share of capital at the BSP International Investment Position's 20% and 80% of government debt held domestically, the same steady state puts household wealth at 3.34 times GDP, matching the 3.35 used to anchor initial wealth (see {ref}`Chap_MacroCalib`).
+
+The previous value, 0.96, is the US default from {cite}`Carroll:2009`. Paired with a US depreciation rate it left the Philippine steady state holding 4.4 times GDP in capital, investing 38% of GDP, and consuming 58% (shares of market-price GDP). The recalibrated steady state invests 24.1% of GDP, against 23.6% in the national accounts (2024, World Bank), although investment is not a target; it is the independent check that the capital level and the depreciation rate are right together. Household consumption is 69.4% of GDP against 76.1% in the data. Most of the remaining gap is government consumption, which the steady state sets at the debt-stabilizing level rather than at today's (see the government expenditures section of {ref}`Chap_MacroCalib`).
+
+The implied real return to capital is 11.4%, close to OG-ZAF's recalibrated 11.0% for South Africa (Penn World Table internal rate of return 12.0%).
 
 ### Frisch elasticity of labor supply
 We take our default value for the Frisch elasticity of labor supply as $\nu=0.25$. This value was estimated by {cite}`McNelisEtAl:2009` (see p. 19).

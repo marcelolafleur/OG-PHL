@@ -49,7 +49,7 @@ kernelspec:
 | $T$                              | Number of periods to steady-state                                       | 320                                                   |
 | $R$                              | Retirement age                                                          | [65.000...65.000]                                     |
 | $\tilde{l}$                      | Maximum hours of labor supply                                           | 1.000                                                 |
-| $\beta$                          | Discount factor                                                         | [0.960...0.960]                                       |
+| $\beta$                          | Discount factor                                                         | [0.867...0.867]                                       |
 | $\sigma$                         | Coefficient of constant relative risk aversion                          | 1.500                                                 |
 | $\nu$                            | Frisch elasticity of labor supply                                       | 0.25                                                 |
 | $b$                              | Scale parameter in utility of leisure                                   | 0.573                                                 |
@@ -61,7 +61,7 @@ kernelspec:
 | $Z_{t}$                          | Total factor productivity                                               | Too large to report here, see default parameters JSON |
 | $\gamma$                         | Capital share of income                                                 | [0.588...0.588]                                       |
 | $\varepsilon$                    | Elasticity of substitution between capital and labor                    | [1.000...1.000]                                       |
-| $\delta$                         | Capital depreciation rate                                               | 0.050                                                 |
+| $\delta$                         | Capital depreciation rate                                               | 0.026                                                 |
 | $g_{y}$                          | Growth rate of labor augmenting technological progress                  | 0.036                                                 |
 | $\texttt{tax_func_type}$       | Functional form used for income tax functions                           | linear                                                |
 | $\texttt{analytical_mtrs}$      | Whether use analytical MTRs or estimate MTRs                            | 0.00E+00                                              |

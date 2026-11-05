@@ -147,35 +147,67 @@ def test_tau_c_covers_all_indirect_taxes(packaged):
 
 
 def test_fiscal_identity_alpha_g(packaged):
-    """alpha_G is set to the level consistent with the debt target: revenue
-    minus the debt-stabilizing primary balance minus transfers and public
-    investment. Uses the model's own SS growth rate and the calibrated
-    steady-state r_gov of ~2.0% (BTr FY2024: interest P763.3bn on ~P15.3tn
-    average debt, less ~3% expected inflation). Revenue includes the captured
-    non-tax lines: BTr income + unallocable income taxes on the CIT side
-    (4.20 total), fees on the indirect side (7.94), and property-type taxes
-    via the wealth tax (1.32)."""
+    """alpha_G's last entry holds from 2027 until the budget rule takes over
+    (tG1), so it is the near-term debt-stabilizing level: revenue minus the
+    debt-stabilizing primary balance minus transfers, public investment and
+    near-term pension outlays. It is not the steady state's G, which is far
+    lower because the steady state carries a mature pension system in an
+    aged population (pensions 6.3% of GDP; see test_pensions_are_sss_db).
+    Uses the model's own SS growth rate and the calibrated r_gov of ~2.0%
+    (BTr FY2024: interest P763.3bn on ~P15.3tn average debt, less ~3%
+    expected inflation). Revenue includes the captured non-tax lines: BTr
+    income + unallocable income taxes on the CIT side (4.20 total), fees on
+    the indirect side (7.94), and property-type taxes via the wealth tax
+    (1.32). Near-term pensions: 2.28% of GDP today (SSS + GSIS + MUP),
+    rising with the old-age ratio over 2027-2044."""
     r_gov_ss = 0.020
     g = np.exp(0.0371282577980211) * (1 + packaged["g_n_ss"]) - 1
     pb_star = (r_gov_ss - g) / (1 + g) * packaged["debt_ratio_ss"]
     revenue = OECD_PIT + OECD_SSC + 0.0420 + 0.0794 + 0.0132 + 0.0007
-    consistent = revenue - pb_star - packaged["alpha_T"][0] - 0.052
-    assert packaged["alpha_G"][-1] == pytest.approx(consistent, abs=0.004)
+    near_term_pensions = 0.028
+    consistent = (
+        revenue - pb_star - packaged["alpha_T"][0] - 0.052 - near_term_pensions
+    )
+    assert packaged["alpha_G"][-1] == pytest.approx(consistent, abs=0.006)
 
 
 def test_alpha_g_glides_from_program_stance_to_identity(packaged):
-    """alpha_G is a declining path: each early value reproduces the MTFF's
-    programmed primary balance (deficit less BESF interest) given the model's
-    realized transition revenue under the data-anchored initial wealth, and
-    the path reaches the debt-stabilizing level by 2028. A flat
-    identity-value alpha_G makes the model consolidate years ahead of the
-    government's own plan. Values re-derived on the solved transition:
-    revenue 19.32/19.58 in 2026/27, program pb -2.22/-1.60, alpha_T 4.48,
-    alpha_I 5.1."""
+    """alpha_G is a declining path: the 2025 and 2026 values reproduce the
+    MTFF's programmed primary balance (deficit less BESF interest: -2.51 and
+    -2.22) given the model's realized transition revenue and today's pension
+    outlays, and the path then reaches the near-term debt-stabilizing level.
+    A flat alpha_G makes the model consolidate years ahead of the
+    government's own plan."""
     path = packaged["alpha_G"]
     assert len(path) > 1
     assert all(a > b for a, b in zip(path, path[1:]))
-    assert path == pytest.approx([0.1122, 0.1092, 0.1051], abs=1e-6)
+    assert path == pytest.approx([0.104, 0.100, 0.077], abs=1e-6)
+
+
+def test_pensions_are_sss_db(packaged):
+    """Public pensions follow the SSS defined-benefit rules (RA 11199; OECD
+    Pensions at a Glance Asia/Pacific 2024): pension age 60, benefit 20% of
+    average monthly earnings plus 2% per credited year beyond ten, about 2%
+    per year over a 40-year career, paid 13 times a year, on the greater of
+    the last five years' or the career average. Coverage is the formal
+    groups (about 36% of the employed contribute to SSS or GSIS), scaled so
+    outlays are 2.28% of GDP today (SSS 1.06% 2023, GSIS 0.68% 2024, MUP
+    pension and gratuity fund 0.54% 2024 GAA) times the rise in the old-age
+    ratio to the steady state (0.164 -> 0.454, factor 2.77): 6.3% of GDP in
+    the steady state. Replaces the US system, which the repo had switched
+    off with zero benefit rates while collecting contributions."""
+    assert packaged["pension_system"] == "Defined Benefits"
+    assert packaged["retirement_age"] == [60]
+    assert packaged["yr_contrib"] == 40
+    assert packaged["avg_earn_num_years"] == 5
+    assert packaged["alpha_db"][0][0] == pytest.approx(
+        0.02 * 13 / 12, abs=1e-4
+    )
+    shape = [0.0, 0.0, 0.5, 1.0, 1.0, 1.0, 1.0]
+    coverage = packaged["replacement_rate_adjust"][0]
+    scale = coverage[-1]
+    assert coverage == pytest.approx([c * scale for c in shape], abs=1e-4)
+    assert 0.8 < scale <= 1.0
 
 
 def test_alpha_i_is_the_mtff_infrastructure_program(packaged):
@@ -222,10 +254,11 @@ def test_beta_is_tuned_to_private_capital(packaged):
     matches PWT 2023 total K/Y 3.97 less ICSD public capital ~0.38 = 3.59,
     which with the IIP foreign share and domestically-held debt also puts
     household wealth at the 3.35 initial-wealth anchor. Uniform across
-    lifetime-income groups. Replaces the US default 0.96."""
+    lifetime-income groups. Tuned with the public pension system on.
+    Replaces the US default 0.96."""
     beta = packaged["beta_annual"]
     assert len(set(beta)) == 1
-    assert 0.85 < beta[0] < 0.89
+    assert 0.82 < beta[0] < 0.87
 
 
 def test_start_year_is_last_observed_year(packaged):

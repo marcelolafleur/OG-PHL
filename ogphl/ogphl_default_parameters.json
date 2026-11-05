@@ -741,13 +741,13 @@
     "ending_age": 100,
     "constant_demographics": false,
     "beta_annual": [
-        0.8667,
-        0.8667,
-        0.8667,
-        0.8667,
-        0.8667,
-        0.8667,
-        0.8667
+        0.841,
+        0.841,
+        0.841,
+        0.841,
+        0.841,
+        0.841,
+        0.841
     ],
     "sigma": 1.5,
     "alpha_c": [
@@ -783,7 +783,7 @@
         0.2
     ],
     "zeta_K": [
-        0.0699
+        0.0705
     ],
     "tG1": 20,
     "tG2": 256,
@@ -791,9 +791,9 @@
         0.0448
     ],
     "alpha_G": [
-        0.1122,
-        0.1092,
-        0.1051
+        0.104,
+        0.1,
+        0.077
     ],
     "alpha_I": [
         0.053,
@@ -1213,7 +1213,7 @@
         0.2448476359365782
     ],
     "r_gov_shift": [
-        -0.00666
+        -0.0066
     ],
     "r_gov_DY": -0.048,
     "r_gov_DY2": 0.04,
@@ -1224,7 +1224,7 @@
     ],
     "c_corp_share_of_assets": 0.7,
     "adjustment_factor_for_cit_receipts": [
-        0.54033
+        0.54249
     ],
     "inv_tax_credit": [
         [
@@ -1233,7 +1233,7 @@
     ],
     "tau_c": [
         [
-            0.11891
+            0.10844
         ]
     ],
     "delta_tau_annual": [
@@ -1248,10 +1248,10 @@
         0.001
     ],
     "p_wealth": [
-        0.004217
+        0.004178
     ],
     "tau_bq": [
-        0.003198
+        0.003044
     ],
     "tau_payroll": [
         [
@@ -2804,20 +2804,20 @@
     "analytical_mtrs": false,
     "age_specific": true,
     "retirement_age": [
-        65
+        60
     ],
-    "pension_system": "US-Style Social Security",
+    "pension_system": "Defined Benefits",
     "tau_p": 0.0,
     "indR": 0.0,
     "k_ret": 0.0,
     "alpha_db": [
         [
-            0.0
+            0.0217
         ]
     ],
     "vpoint": 0.0,
     "yr_contrib": 40,
-    "avg_earn_num_years": 35,
+    "avg_earn_num_years": 5,
     "AIME_bkt_1": 749.0,
     "AIME_bkt_2": 4517.0,
     "PIA_rate_bkt_1": 0.0,
@@ -2860,9 +2860,9 @@
     "RC_SS": 1e-09,
     "RC_TPI": 0.01,
     "reform_use_baseline_solution": true,
-    "initial_guess_r_SS": 0.1137,
-    "initial_guess_TR_SS": 0.0973,
-    "initial_guess_factor_SS": 213602,
+    "initial_guess_r_SS": 0.1132,
+    "initial_guess_TR_SS": 0.0954,
+    "initial_guess_factor_SS": 218340,
     "omega": [
         [
             [
@@ -871121,7 +871121,7 @@
             [
                 0.35,
                 1.196012,
-                1.5516e-08
+                1.4737e-08
             ]
         ]
     ],
@@ -871130,7 +871130,7 @@
             [
                 0.35,
                 1.196012,
-                1.5516e-08
+                1.4737e-08
             ]
         ]
     ],
@@ -871139,7 +871139,7 @@
             [
                 0.35,
                 1.196012,
-                1.5516e-08
+                1.4737e-08
             ]
         ]
     ],
@@ -873315,5 +873315,16 @@
         ]
     ],
     "initial_wealth_ratio": 3.35,
-    "TPI_outer_method": "anderson"
+    "TPI_outer_method": "anderson",
+    "replacement_rate_adjust": [
+        [
+            0.0,
+            0.0,
+            0.4615,
+            0.923,
+            0.923,
+            0.923,
+            0.923
+        ]
+    ]
 }
