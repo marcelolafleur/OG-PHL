@@ -741,13 +741,13 @@
     "ending_age": 100,
     "constant_demographics": false,
     "beta_annual": [
-        0.96,
-        0.96,
-        0.96,
-        0.96,
-        0.96,
-        0.96,
-        0.96
+        0.8667,
+        0.8667,
+        0.8667,
+        0.8667,
+        0.8667,
+        0.8667,
+        0.8667
     ],
     "sigma": 1.5,
     "alpha_c": [
@@ -772,7 +772,7 @@
             1.0
         ]
     ],
-    "delta_annual": 0.05,
+    "delta_annual": 0.026,
     "delta_g_annual": 0.02,
     "ltilde": 1.0,
     "world_int_rate_annual": [
@@ -783,7 +783,7 @@
         0.2
     ],
     "zeta_K": [
-        0.47
+        0.0699
     ],
     "tG1": 20,
     "tG2": 256,
@@ -793,7 +793,7 @@
     "alpha_G": [
         0.1122,
         0.1092,
-        0.1045
+        0.1051
     ],
     "alpha_I": [
         0.053,
@@ -1213,7 +1213,7 @@
         0.2448476359365782
     ],
     "r_gov_shift": [
-        -0.019
+        -0.00666
     ],
     "r_gov_DY": -0.048,
     "r_gov_DY2": 0.04,
@@ -1224,7 +1224,7 @@
     ],
     "c_corp_share_of_assets": 0.7,
     "adjustment_factor_for_cit_receipts": [
-        0.583
+        0.54033
     ],
     "inv_tax_credit": [
         [
@@ -1233,7 +1233,7 @@
     ],
     "tau_c": [
         [
-            0.1451
+            0.11891
         ]
     ],
     "delta_tau_annual": [
@@ -1248,10 +1248,10 @@
         0.001
     ],
     "p_wealth": [
-        0.00348
+        0.004217
     ],
     "tau_bq": [
-        0.0035
+        0.003198
     ],
     "tau_payroll": [
         [
@@ -2860,9 +2860,9 @@
     "RC_SS": 1e-09,
     "RC_TPI": 0.01,
     "reform_use_baseline_solution": true,
-    "initial_guess_r_SS": 0.064,
-    "initial_guess_TR_SS": 0.1324,
-    "initial_guess_factor_SS": 172241.0,
+    "initial_guess_r_SS": 0.1137,
+    "initial_guess_TR_SS": 0.0973,
+    "initial_guess_factor_SS": 213602,
     "omega": [
         [
             [
@@ -871121,7 +871121,7 @@
             [
                 0.35,
                 1.196012,
-                1.9e-08
+                1.5516e-08
             ]
         ]
     ],
@@ -871130,7 +871130,7 @@
             [
                 0.35,
                 1.196012,
-                1.9e-08
+                1.5516e-08
             ]
         ]
     ],
@@ -871139,7 +871139,7 @@
             [
                 0.35,
                 1.196012,
-                1.9e-08
+                1.5516e-08
             ]
         ]
     ],
@@ -873314,6 +873314,6 @@
             2.227991985670316e-06
         ]
     ],
-    "initial_wealth_ratio": 2.783,
+    "initial_wealth_ratio": 3.35,
     "TPI_outer_method": "anderson"
 }

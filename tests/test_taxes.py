@@ -125,9 +125,12 @@ def test_wealth_tax_captures_property_type_taxes(packaged):
 
 def test_zeta_k_is_level_validated_against_iip(packaged):
     """zeta_K is a marginal fill share tuned so the solved foreign share of
-    capital matches the BSP IIP (~20%); the Chinn-Ito index (~0.4) is the
-    prior, not the target."""
-    assert 0.4 <= packaged["zeta_K"][0] <= 0.55
+    capital matches the BSP IIP (~20%). It is the share of the gap between
+    capital demanded at the world rate and domestically owned capital that
+    foreigners fill; with the return on capital at ~11% against a 5% world
+    rate that gap is large, so a small share delivers the IIP level. The
+    Chinn-Ito index (~0.4) measures legal openness, not this share."""
+    assert 0.05 <= packaged["zeta_K"][0] <= 0.10
 
 
 def test_bequest_tax_is_effective_not_statutory(packaged):
@@ -172,7 +175,7 @@ def test_alpha_g_glides_from_program_stance_to_identity(packaged):
     path = packaged["alpha_G"]
     assert len(path) > 1
     assert all(a > b for a, b in zip(path, path[1:]))
-    assert path == pytest.approx([0.1122, 0.1092, 0.1045], abs=1e-6)
+    assert path == pytest.approx([0.1122, 0.1092, 0.1051], abs=1e-6)
 
 
 def test_alpha_i_is_the_mtff_infrastructure_program(packaged):
@@ -191,19 +194,38 @@ def test_initial_public_capital_matches_icsd(packaged):
 
 
 def test_initial_wealth_is_data_anchored(packaged):
-    """initial_wealth_ratio (requires PSLmodels/OG-Core#1189) anchors
-    aggregate initial wealth relative to steady-state GDP; the value 2.677
-    is chosen so the SOLVED initial wealth-to-GDP ratio equals the data
-    target of 3.35 = (PWT 2023 total K/Y 3.97 - ICSD public capital ~0.38)
+    """Since ogcore 0.22, initial_wealth_ratio is the target ratio of initial
+    household wealth to initial-period GDP, so it is set to the data value
+    itself: 3.35 = (PWT 2023 total K/Y 3.97 - ICSD public capital ~0.38)
     x 0.80 domestic share (BSP IIP) + 0.48 domestically-held debt (BTr).
-    Delivered ratio is verified in the transition run (goodness-of-fit).
     Without the anchor every initial household starts with ~63% more wealth
     than its steady-state counterpart and retirees consume the windfall."""
     data_target = (3.97 - 0.38) * 0.8 + 0.8 * 0.6
     assert data_target == pytest.approx(3.35, abs=0.005)
-    assert packaged["initial_wealth_ratio"] == pytest.approx(2.783, abs=1e-6)
-    # parameter < data target because Y(0) < Y_ss for a converging economy
-    assert packaged["initial_wealth_ratio"] < data_target
+    assert packaged["initial_wealth_ratio"] == pytest.approx(3.35, abs=1e-6)
+
+
+def test_delta_is_measured_depreciation(packaged):
+    """delta = consumption of fixed capital / capital stock: World Bank CFC
+    10.12% of GNI (2021) x GNI/GDP 1.036 = 10.48% of GDP, over PWT 11 capital
+    at constant national prices, 4.04 x GDP in 2021, gives 0.026 (2020: 0.025).
+    Public capital is assumed to depreciate at the same rate (no published
+    split). Replaces the US default 0.05."""
+    cfc_gdp = 0.10123 * (20101002089900 / 19410614486200)
+    k_y = 4124357.75 / 1020730.875
+    assert cfc_gdp / k_y == pytest.approx(0.026, abs=0.0005)
+    assert packaged["delta_annual"] == 0.026
+
+
+def test_beta_is_tuned_to_private_capital(packaged):
+    """beta_annual is tuned (not sourced) so the steady state's private K/Y
+    matches PWT 2023 total K/Y 3.97 less ICSD public capital ~0.38 = 3.59,
+    which with the IIP foreign share and domestically-held debt also puts
+    household wealth at the 3.35 initial-wealth anchor. Uniform across
+    lifetime-income groups. Replaces the US default 0.96."""
+    beta = packaged["beta_annual"]
+    assert len(set(beta)) == 1
+    assert 0.85 < beta[0] < 0.89
 
 
 def test_start_year_is_last_observed_year(packaged):
