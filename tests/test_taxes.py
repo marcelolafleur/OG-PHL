@@ -159,14 +159,19 @@ def test_fiscal_identity_alpha_g(packaged):
     income + unallocable income taxes on the CIT side (4.20 total), fees on
     the indirect side (7.94), and property-type taxes via the wealth tax
     (1.32). Near-term pensions: 2.28% of GDP today (SSS + GSIS + MUP),
-    rising with the old-age ratio over 2027-2044."""
+    rising with covered retirees per worker to 3.4% by 2044 (2.87% average
+    over 2027-2044); public investment averages 5.15% of GDP."""
     r_gov_ss = 0.020
-    g = np.exp(0.0371282577980211) * (1 + packaged["g_n_ss"]) - 1
+    g = np.exp(packaged["g_y_annual"]) * (1 + packaged["g_n_ss"]) - 1
     pb_star = (r_gov_ss - g) / (1 + g) * packaged["debt_ratio_ss"]
     revenue = OECD_PIT + OECD_SSC + 0.0420 + 0.0794 + 0.0132 + 0.0007
-    near_term_pensions = 0.028
+    near_term_pensions = 0.0287
     consistent = (
-        revenue - pb_star - packaged["alpha_T"][0] - 0.052 - near_term_pensions
+        revenue
+        - pb_star
+        - packaged["alpha_T"][0]
+        - 0.0515
+        - near_term_pensions
     )
     assert packaged["alpha_G"][-1] == pytest.approx(consistent, abs=0.006)
 
@@ -181,7 +186,7 @@ def test_alpha_g_glides_from_program_stance_to_identity(packaged):
     path = packaged["alpha_G"]
     assert len(path) > 1
     assert all(a > b for a, b in zip(path, path[1:]))
-    assert path == pytest.approx([0.104, 0.100, 0.077], abs=1e-6)
+    assert path == pytest.approx([0.1034, 0.0989, 0.0724], abs=1e-6)
 
 
 def test_pensions_are_sss_db(packaged):
@@ -189,12 +194,17 @@ def test_pensions_are_sss_db(packaged):
     Pensions at a Glance Asia/Pacific 2024): pension age 60, benefit 20% of
     average monthly earnings plus 2% per credited year beyond ten, about 2%
     per year over a 40-year career, paid 13 times a year, on the greater of
-    the last five years' or the career average. Coverage is the formal
-    groups (about 36% of the employed contribute to SSS or GSIS), scaled so
-    outlays are 2.28% of GDP today (SSS 1.06% 2023, GSIS 0.68% 2024, MUP
-    pension and gratuity fund 0.54% 2024 GAA) times the rise in the old-age
-    ratio to the steady state (0.164 -> 0.454, factor 2.77): 6.3% of GDP in
-    the steady state. Replaces the US system, which the repo had switched
+    the last five years' or the career average (nominal and unindexed, so
+    the last five years in practice). Coverage is the formal groups (about
+    36% of the employed contribute to SSS or GSIS) times one scale that also
+    carries generosity: GSIS and military pensions (54% of spending) pay more
+    than the SSS formula, and the formula's flat add-ons are not modeled, so
+    the scale may exceed one. It is set so outlays are 2.28% of GDP today
+    (SSS 1.06% 2023, GSIS 0.68% 2024, MUP pension and gratuity fund 0.54%
+    2024 GAA) times the rise in covered
+    retirees per worker to the steady state (factor 3.056, which weights by
+    coverage because the covered groups live longer): 6.97% of GDP in the
+    steady state. Replaces the US system, which the repo had switched
     off with zero benefit rates while collecting contributions."""
     assert packaged["pension_system"] == "Defined Benefits"
     assert packaged["retirement_age"] == [60]
@@ -207,7 +217,7 @@ def test_pensions_are_sss_db(packaged):
     coverage = packaged["replacement_rate_adjust"][0]
     scale = coverage[-1]
     assert coverage == pytest.approx([c * scale for c in shape], abs=1e-4)
-    assert 0.8 < scale <= 1.0
+    assert 0.8 < scale <= 1.2
 
 
 def test_alpha_i_is_the_mtff_infrastructure_program(packaged):
@@ -274,3 +284,11 @@ def test_tpi_uses_anderson_acceleration(packaged):
     iterations / ~2 min vs ~30-70 / ~20 min damped), validated on both the
     baseline and the initial-wealth comparison runs."""
     assert packaged["TPI_outer_method"] == "anderson"
+
+
+def test_g_y_is_growth_per_person_employed(packaged):
+    """g_y is labor-augmenting productivity growth, so it is World Bank growth
+    of GDP per person employed (SL.GDP.PCAP.EM.KD), mean 2001-2019, not per
+    capita: the rise in the share of the population at work is produced by
+    the model's own demographics. Per capita gave 0.0371."""
+    assert packaged["g_y_annual"] == pytest.approx(0.031332, abs=1e-5)

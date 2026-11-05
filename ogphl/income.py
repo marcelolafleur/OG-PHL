@@ -3,6 +3,7 @@ import scipy.optimize as opt
 import scipy.interpolate as si
 from ogcore import parameter_plots as pp
 from ogcore import utils
+import csv
 import os
 import json
 import urllib.request
@@ -11,7 +12,7 @@ CUR_PATH = os.path.abspath(os.path.dirname(__file__))
 OUTPUT_DIR = os.path.join(CUR_PATH, "OUTPUT", "ability")
 
 
-def get_e_interp(E, S, J, lambdas, age_wgts, gini_to_match=40.7, plot=False):
+def get_e_interp(E, S, J, lambdas, age_wgts, gini_to_match=39.3, plot=False):
     """
     This function takes the calibrated lifetime earnings profiles
     (abilities, e matrix) from OG-USA and then adjusts the shape of those
@@ -38,8 +39,9 @@ def get_e_interp(E, S, J, lambdas, age_wgts, gini_to_match=40.7, plot=False):
             returned by ogcore >= 0.18) is also accepted, in which case
             the age distribution is its sum over income groups
         gini_to_match (float): Gini coefficient to match, default is
-            40.7, the Gini coefficient for PHL in 2023
-            https://data.worldbank.org/indicator/SI.POV.GINI
+            39.3, the World Bank PIP income Gini for PHL in 2023 (FIES;
+            the same income concept as the US reference of 41.5, not the
+            PIP consumption Gini of 35.2), https://pip.worldbank.org
         plot (bool): if True, creates plots of emat_orig and the new
             interpolated emat_new
 
@@ -48,6 +50,7 @@ def get_e_interp(E, S, J, lambdas, age_wgts, gini_to_match=40.7, plot=False):
             so that population-weighted average is 1, size SxJ
 
     """
+    lambdas = np.asarray(lambdas, dtype=float).flatten()
     assert lambdas.shape[0] == J
     age_wgts = np.asarray(age_wgts)
     if age_wgts.ndim == 2:  # SxJ from ogcore >= 0.18: age dist is the J-sum
@@ -78,6 +81,9 @@ def get_e_interp(E, S, J, lambdas, age_wgts, gini_to_match=40.7, plot=False):
     usa_omega_SS = np.array(usa_json["omega_SS"])
     if usa_omega_SS.ndim == 2:  # SxJ snapshot: age dist is the J-sum
         usa_omega_SS = usa_omega_SS.sum(axis=1)
+    # Half one of the method (EAPD-DRB/OG-ZAF#18): reshape the US age pattern
+    # to the Philippine one before tilting the income-group gaps.
+    usa_e = apply_age_shape(usa_e, usa_E, usa_S)
 
     # Define a function that will find the "a" in the equation:
     # e_Y = e_USA * exp(a * e_USA)
@@ -217,3 +223,105 @@ def get_e_interp(E, S, J, lambdas, age_wgts, gini_to_match=40.7, plot=False):
             )
 
     return emat_new_scaled
+
+
+# ---------------------------------------------------------------------------
+# Age shape of earnings (ported from OG-JPN's ogjpn/income.py)
+#
+# EAPD-DRB/OG-ZAF#18 sets out two adjustments to OG-USA's estimated lifetime
+# earnings curves:
+#   1. reshape the AGE pattern to the target country's own labour-income-by-
+#      age profile   <- this section
+#   2. tilt the gaps between the J income groups to the target country's
+#      inequality <- get_e_interp above
+# Both profiles are National Transfer Accounts labour income ("Labor Income",
+# "Smooth Mean"), fetched by scripts/fetch_nta_age_profiles.py: the
+# Philippines' latest (2015, prepared by M. Abrigo) against the nearest US
+# year (2011). NTA labour income is per person at each age, so the factor
+# carries participation differences as well as earnings differences.
+# ---------------------------------------------------------------------------
+
+NTA_DIR = os.path.join(CUR_PATH, "data")
+
+# Ages over which each profile is normalised before the ratio is taken. NTA
+# reports levels in each country's own currency, so only the SHAPE transfers;
+# normalising over prime working ages makes the two comparable.
+NORMALISE_AGES = (20, 65)
+
+# Above this age both profiles approach zero and their ratio becomes noise, so
+# the factor is held flat at its value here rather than dividing small by
+# small.
+FACTOR_TAPER_AGE = 72
+
+
+def _load_nta_profile(iso):
+    """
+    Read one NTA labour-income age profile written by
+    ``scripts/fetch_nta_age_profiles.py``.
+
+    Args:
+        iso (str): "PHL" or "USA"
+
+    Returns:
+        dict: {year (int): numpy array of income by single year of age 0-110}
+    """
+    path = os.path.join(NTA_DIR, f"nta_labor_income_{iso}.csv")
+    out = {}
+    with open(path, encoding="utf-8") as fh:
+        for row in csv.DictReader(fh):
+            ages = []
+            for age in range(0, 111):
+                val = row.get(f"Age{age}", "")
+                ages.append(float(val) if val not in ("", None) else np.nan)
+            out[int(row["Year"])] = np.array(ages)
+    return out
+
+
+def get_age_shape_factor(E, S):
+    """
+    Ratio of the Philippines' to the USA's labour-income age profile, by model
+    age.
+
+    Philippine labour income peaks at 39, against 49 in the US: earnings start
+    earlier (factor 2.0 at 20, 1.29 at 30) and fall much sooner, with
+    informality and a pension age of 60 (0.76 at 55, 0.54 at 65), once both
+    profiles are put on a common scale.
+
+    Args:
+        E (int): age at which agents become economically active
+        S (int): number of model ages
+
+    Returns:
+        numpy array of length S: multiplicative factor to apply to the OG-USA
+        earnings profile at each model age
+    """
+    phl, usa = _load_nta_profile("PHL"), _load_nta_profile("USA")
+    phl_year = max(phl)
+    # Nearest-year comparator, as the method specifies.
+    usa_year = min(usa, key=lambda y: abs(y - phl_year))
+    p, u = phl[phl_year], usa[usa_year]
+
+    lo, hi = NORMALISE_AGES
+    p_norm = p / np.nanmean(p[lo:hi])
+    u_norm = u / np.nanmean(u[lo:hi])
+
+    ages = np.arange(E, E + S)
+    capped = np.minimum(ages, FACTOR_TAPER_AGE)
+    factor = p_norm[capped] / u_norm[capped]
+    return np.nan_to_num(factor, nan=1.0, posinf=1.0, neginf=1.0)
+
+
+def apply_age_shape(emat, E, S):
+    """
+    Reshape an earnings matrix by the Philippines/USA age factor.
+
+    Args:
+        emat (numpy array): SxJ earnings matrix
+        E (int): age agents become economically active
+        S (int): number of model ages
+
+    Returns:
+        numpy array: SxJ matrix with the Philippine age shape imposed
+    """
+    factor = get_age_shape_factor(E, S)
+    return emat * factor[:, None]

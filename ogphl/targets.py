@@ -42,6 +42,12 @@ TARGETS = {
     # Spending
     "TR/Y": (0.0448, "alpha_T: social transfers, DBM/BESF"),
     "I_g/Y": (0.052, "alpha_I: public infrastructure program, MTFF/BESF"),
+    "pensions/Y": (
+        0.0697,
+        "today's 2.28% (SSS 1.06% 2023, GSIS 0.68% 2024, MUP fund 0.54% 2024 "
+        "GAA) x 3.056, the rise in covered retirees per worker to the steady "
+        "state (a mature system in the long-run population)",
+    ),
     # External
     "K_f/K": (0.20, "BSP International Investment Position, inward share"),
     "RM/Y": (

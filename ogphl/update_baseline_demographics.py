@@ -29,6 +29,7 @@ from ogcore import demographics
 from ogcore.parameters import Specifications
 
 from ogphl import income
+from ogphl.demographic_gradients import demographic_gradients
 from ogphl.calibrate import UN_COUNTRY_CODE
 
 # Demographic keys returned by get_pop_objs, plus the derived earnings profile
@@ -134,6 +135,9 @@ def regenerate():
         spec.pop("initial_wealth_ratio", None)
     p.update_specifications(spec)  # single-sector base (M=1, I=1)
 
+    gradients = demographic_gradients(
+        p.E, p.S, p.T, p.start_year, p.g_y_annual
+    )
     pop = demographics.get_pop_objs(
         p.E,
         p.S,
@@ -144,6 +148,7 @@ def regenerate():
         initial_data_year=p.start_year - 1,
         final_data_year=p.start_year + 1,
         income_percentiles=p.lambdas.flatten(),
+        **gradients,
         GraphDiag=False,
     )
     demog80 = demographics.get_pop_objs(
@@ -156,6 +161,7 @@ def regenerate():
         initial_data_year=p.start_year - 1,
         final_data_year=p.start_year + 1,
         income_percentiles=p.lambdas.flatten(),
+        **gradients,
         GraphDiag=False,
     )
     e = income.get_e_interp(p.E, p.S, p.J, p.lambdas, demog80["omega_SS"])
