@@ -93,7 +93,7 @@ uv run python examples/run_og_phl.py
 
 #### What happens
 
-The first `uv run` creates the project environment if it does not exist yet — downloading a compatible Python interpreter if needed and installing the exact locked dependencies — and then runs the example. A full baseline-plus-reform run takes from 35 minutes to more than two hours; when it finishes, its plots and tables are saved under `./examples/OG-PHL-Example/` (see the list of outputs below).
+The first `uv run` creates the project environment if it does not exist yet — downloading a compatible Python interpreter if needed and installing the exact locked dependencies — and then runs the example. A full baseline-plus-reform run takes about 25 minutes on a 10-core laptop (18 for the baseline, 7 for the reform), longer on smaller machines; when it finishes, its plots and tables are saved under `./examples/OG-PHL-Example/` (see the list of outputs below).
 
 ### Installing for development or contributing
 
@@ -122,7 +122,7 @@ The first `uv run` creates the project environment if it does not exist yet — 
     * See [`ogcore.TPI.py`](https://github.com/PSLmodels/OG-Core/blob/master/ogcore/TPI.py) for what is in the dictionary object in this pickle file
   * An analogous set of files in the `./examples/OG-PHL-Example/OUTPUT_REFORM` directory, which represent objects from the simulation of the reform policy
 
-Note that, depending on your machine, a full model run (solving for the full time path equilibrium for the baseline and reform policies) can take from 35 minutes to more than two hours of compute time.
+Note that, depending on your machine, a full model run (solving for the full time path equilibrium for the baseline and reform policies) takes about 25 minutes on a 10-core laptop and longer on smaller machines.
 
 If you run into errors running the example script, please open a new issue in the OG-PHL repo with a description of the issue and any relevant tracebacks you receive.
 
