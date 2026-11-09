@@ -186,8 +186,9 @@ def test_fiscal_identity_alpha_g(packaged):
 
 def test_alpha_g_glides_from_program_stance_to_identity(packaged):
     """alpha_G is a declining path: the 2025-2028 values reproduce the
-    MTFF's programmed primary balance (DBCC deficit path less BESF interest:
-    -2.51, -2.22, -1.6 and -1.1% of GDP) given the model's realized
+    programmed primary balance (DBM BESF FY2026 Table A.2, deficit less
+    interest: -2.51, -2.26, -1.59 and -1.03% of GDP; ogphl/data/
+    fiscal_program_PHL.csv) given the model's realized
     transition revenue and phased-in pension outlays, and from 2029 the path
     holds the level that returns debt to 60% of GDP by 2044, when the budget
     rule (tG1) takes over. A flat alpha_G makes the
@@ -196,7 +197,7 @@ def test_alpha_g_glides_from_program_stance_to_identity(packaged):
     assert len(path) == 5
     assert all(a > b for a, b in zip(path, path[1:]))
     assert path == pytest.approx(
-        [0.110425, 0.105047, 0.094667, 0.084986, 0.073323], abs=1e-6
+        [0.110084, 0.10507, 0.094077, 0.083785, 0.073323], abs=1e-6
     )
 
 
