@@ -168,29 +168,34 @@ def test_fiscal_identity_alpha_g(packaged):
     rising with covered retirees per worker to 3.4% by 2044 (2.87% average
     over 2027-2044); public investment averages 5.15% of GDP. Every term is
     a share of GDP at market prices; alpha_G is a share of the model's Y, so
-    the identity is scaled by K_MKT."""
+    the identity is scaled by K_MKT. The packaged value is derived from the
+    solved transition instead (the level whose 2029-2044 mean primary
+    balance equals pb*), which sits below this static value by the
+    transition's revenue shortfall: revenue dips to about 18.2% of GDP
+    mid-window against 19.4% at the data and the steady state."""
     r_gov_ss = 0.020
     g = np.exp(packaged["g_y_annual"]) * (1 + packaged["g_n_ss"]) - 1
     pb_star = (r_gov_ss - g) / (1 + g) * 0.60
     revenue = OECD_PIT + OECD_SSC + 0.0420 + 0.0794 + 0.0132 + 0.0007
     near_term_pensions = 0.0287
-    consistent = revenue - pb_star - 0.0448 - 0.0515 - near_term_pensions
-    assert packaged["alpha_G"][-1] == pytest.approx(
-        consistent * K_MKT, abs=0.006
-    )
+    static = revenue - pb_star - 0.0448 - 0.0515 - near_term_pensions
+    shortfall = static - packaged["alpha_G"][-1] / K_MKT
+    assert 0.0 < shortfall < 0.025
 
 
 def test_alpha_g_glides_from_program_stance_to_identity(packaged):
-    """alpha_G is a declining path: the 2025 and 2026 values reproduce the
-    MTFF's programmed primary balance (deficit less BESF interest: -2.51 and
-    -2.22) given the model's realized transition revenue and today's pension
-    outlays, and the path then reaches the near-term debt-stabilizing level.
-    A flat alpha_G makes the model consolidate years ahead of the
-    government's own plan."""
+    """alpha_G is a declining path: the 2025-2028 values reproduce the
+    MTFF's programmed primary balance (DBCC deficit path less BESF interest:
+    -2.51, -2.22, -1.6 and -1.1% of GDP) given the model's realized
+    transition revenue and phased-in pension outlays, and from 2029 the path
+    holds the near-term debt-stabilizing level. A flat alpha_G makes the
+    model consolidate years ahead of the government's own plan."""
     path = packaged["alpha_G"]
-    assert len(path) > 1
+    assert len(path) == 5
     assert all(a > b for a, b in zip(path, path[1:]))
-    assert path == pytest.approx([0.112318, 0.10743, 0.078644], abs=1e-6)
+    assert path == pytest.approx(
+        [0.110425, 0.105047, 0.094667, 0.084986, 0.064164], abs=1e-6
+    )
 
 
 def test_pensions_are_sss_db(packaged):
@@ -209,7 +214,10 @@ def test_pensions_are_sss_db(packaged):
     retirees per worker to the steady state (factor 3.056, which weights by
     coverage because the covered groups live longer): 6.97% of GDP in the
     steady state. Replaces the US system, which the repo had switched
-    off with zero benefit rates while collecting contributions."""
+    off with zero benefit rates while collecting contributions. The mature
+    scale applies from 2050; from 2025 it rises linearly from 77% of it, so
+    outlays start at today's 2.28% of GDP (the maturing of the scheme: a
+    mature system from the start paid 2.95%)."""
     assert packaged["pension_system"] == "Defined Benefits"
     assert packaged["retirement_age"] == [60]
     assert packaged["yr_contrib"] == 40
@@ -218,10 +226,15 @@ def test_pensions_are_sss_db(packaged):
         0.02 * 13 / 12, abs=1e-4
     )
     shape = [0.0, 0.0, 0.5, 1.0, 1.0, 1.0, 1.0]
-    coverage = packaged["replacement_rate_adjust"][0]
+    rows = packaged["replacement_rate_adjust"]
+    coverage = rows[-1]
     scale = coverage[-1]
     assert coverage == pytest.approx([c * scale for c in shape], abs=1e-4)
     assert 0.8 < scale <= 1.2
+    phase = [row[-1] / scale for row in rows]
+    assert len(rows) == 26
+    assert phase[0] == pytest.approx(0.7728, abs=1e-4)
+    assert all(a < b for a, b in zip(phase, phase[1:]))
 
 
 def test_alpha_i_is_the_mtff_infrastructure_program(packaged):
