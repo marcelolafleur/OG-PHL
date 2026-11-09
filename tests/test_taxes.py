@@ -169,8 +169,9 @@ def test_fiscal_identity_alpha_g(packaged):
     over 2027-2044); public investment averages 5.15% of GDP. Every term is
     a share of GDP at market prices; alpha_G is a share of the model's Y, so
     the identity is scaled by K_MKT. The packaged value is derived from the
-    solved transition instead (the level whose 2029-2044 mean primary
-    balance equals pb*), which sits below this static value by the
+    solved transition instead (the level that returns debt to 60% of GDP
+    by 2044, when the budget rule takes over), which sits below this static
+    value by the
     transition's revenue shortfall: revenue dips to about 18.2% of GDP
     mid-window against 19.4% at the data and the steady state."""
     r_gov_ss = 0.020
@@ -188,13 +189,14 @@ def test_alpha_g_glides_from_program_stance_to_identity(packaged):
     MTFF's programmed primary balance (DBCC deficit path less BESF interest:
     -2.51, -2.22, -1.6 and -1.1% of GDP) given the model's realized
     transition revenue and phased-in pension outlays, and from 2029 the path
-    holds the near-term debt-stabilizing level. A flat alpha_G makes the
+    holds the level that returns debt to 60% of GDP by 2044, when the budget
+    rule (tG1) takes over. A flat alpha_G makes the
     model consolidate years ahead of the government's own plan."""
     path = packaged["alpha_G"]
     assert len(path) == 5
     assert all(a > b for a, b in zip(path, path[1:]))
     assert path == pytest.approx(
-        [0.110425, 0.105047, 0.094667, 0.084986, 0.064164], abs=1e-6
+        [0.110425, 0.105047, 0.094667, 0.084986, 0.073323], abs=1e-6
     )
 
 
