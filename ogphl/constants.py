@@ -14,7 +14,7 @@ DEFAULT_START_YEAR = 2025
 # private capital share. Defined here -- not in either caller -- so the
 # calibration builder (create_multisector_calibration) and the live
 # Calibration class (calibrate) share one source and cannot drift.
-TOTAL_CAPITAL_SHARE = 0.58785
+TOTAL_CAPITAL_SHARE = 0.51494
 
 # Public (infrastructure) capital's output share, gamma_g, the single-industry
 # OG-PHL value. It is carved out of TOTAL_CAPITAL_SHARE, not out of labor.

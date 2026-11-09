@@ -85,6 +85,7 @@ import numpy as np
 
 from ogphl import input_output as io
 from ogphl.constants import PUBLIC_CAPITAL_SHARE, TOTAL_CAPITAL_SHARE
+from ogphl.labor import MAX_CHI_N
 
 CUR_DIR = os.path.dirname(os.path.realpath(__file__))
 MULTISECTOR_PARAMS_PATH = os.path.join(
@@ -136,7 +137,10 @@ def build_multisector_params():
         base = json.load(f)
     chi_scale = k_units ** (base["sigma"] - 1.0)
     chi_b = [float(v) * chi_scale for v in base["chi_b"]]
-    chi_n = [float(v) * chi_scale for v in base["chi_n"]]
+    # OG-Core caps chi_n at MAX_CHI_N. The single-industry profile already
+    # sits at the cap at the oldest ages (ogphl/labor.py), where scaling
+    # would leave the valid range; those ages stay at the cap.
+    chi_n = [min(float(v) * chi_scale, MAX_CHI_N) for v in base["chi_n"]]
     return {
         "M": int(n_ind),
         "I": int(n_cons),

@@ -4,7 +4,14 @@ Tests of the steady-state dashboard targets. No model solve.
 
 import numpy as np
 
-from ogphl.targets import TARGETS, ss_moments
+import pytest
+
+from ogphl.targets import (
+    CONS_TAX_SHARE,
+    MODEL_PER_MARKET_GDP,
+    TARGETS,
+    ss_moments,
+)
 
 SS_KEYS = [
     "Y",
@@ -49,3 +56,21 @@ def test_steady_state_targets_have_model_moments():
         if name.endswith("anchor"):
             continue
         assert name in moments, name
+
+
+def test_moments_are_shares_of_market_price_gdp():
+    """Model ratios are divided by Y plus consumption tax, GDP at market
+    prices, the basis every data target is published on."""
+    ss = {k: np.array(1.0) for k in SS_KEYS}
+    ss["cons_tax_revenue"] = np.array(0.1)
+    m = ss_moments(ss)
+    assert m["PIT/Y"] == pytest.approx(1 / 1.1)
+    assert m["GDP mkt / Y"] == pytest.approx(1.1)
+
+
+def test_market_to_model_factor_matches_the_cons_tax_target():
+    """A data share x of market GDP is x * MODEL_PER_MARKET_GDP of the
+    model's Y when consumption tax is CONS_TAX_SHARE of market GDP."""
+    tax = CONS_TAX_SHARE * MODEL_PER_MARKET_GDP  # as a share of Y
+    assert 1 + tax == pytest.approx(MODEL_PER_MARKET_GDP)
+    assert TARGETS["cons tax/Y"][0] == CONS_TAX_SHARE

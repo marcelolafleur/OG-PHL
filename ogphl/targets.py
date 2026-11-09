@@ -4,13 +4,29 @@ computes the matching model moments from a solved ``SS_vars.pkl``.
 
 Every target carries its source; the same numbers are pinned against the
 packaged parameters in ``tests/test_taxes.py`` and
-``tests/test_remittances.py``. Ratios are to GDP. Revenue shares are the
-OECD Revenue Statistics in Asia and the Pacific 2025 (Philippines, 2023)
-plus the BESF/BTr non-tax lines the calibration captures. Fiscal rows
-first, then external, production and households.
+``tests/test_remittances.py``. Revenue shares are the OECD Revenue
+Statistics in Asia and the Pacific 2025 (Philippines, 2023) plus the BESF/BTr
+non-tax lines the calibration captures. Fiscal rows first, then external,
+production and households.
+
+Every ratio is to GDP at market prices, the national-accounts GDP the data
+are published against. OG-Core's output Y is GDP before consumption taxes:
+households pay (1 + tau_c) times the producer price and the tax is collected
+on top of Y, so GDP at market prices is Y plus consumption-tax revenue (the
+mapping of Prescott 2004, following Mendoza, Razin and Tesar 1994). Model
+moments are therefore divided by Y + consumption tax, and parameters that
+OG-Core multiplies by its own Y (alpha_T, alpha_G, alpha_I, alpha_RM, the
+debt ratios, initial wealth and public capital) are the data share times
+``MODEL_PER_MARKET_GDP``.
 """
 
 import numpy as np
+
+# Consumption-tax revenue as a share of GDP at market prices (the "cons tax"
+# target below) and the ratio of market-price GDP to the model's Y it
+# implies: Y_mkt = Y + tax and tax = share x Y_mkt, so Y_mkt / Y = 1/(1-share)
+CONS_TAX_SHARE = 0.0794
+MODEL_PER_MARKET_GDP = 1 / (1 - CONS_TAX_SHARE)
 
 # moment: (target, source)
 TARGETS = {
@@ -23,7 +39,7 @@ TARGETS = {
         "unallocable income taxes 0.30 (OECD 2023; BESF)",
     ),
     "cons tax/Y": (
-        0.0794,
+        CONS_TAX_SHARE,
         "VAT + excises + customs 7.39 (OECD 2023) + fees and charges "
         "0.55 (BESF non-tax)",
     ),
@@ -56,11 +72,14 @@ TARGETS = {
         "income measure; the published 7.3% ratio is the narrower cash "
         "measure",
     ),
-    # Production and households (no binding target yet: beta/delta still sit
-    # at inherited defaults; a PWT capital-output anchor is the open
-    # calibration item, see the ZAF 0.3.0 baseline for the pattern)
+    # Production and households
+    "K/Y": (
+        3.59,
+        "PWT 11 capital stock 2023 (3.97) less public capital ~0.38 (IMF "
+        "ICSD); delta and beta are set to it",
+    ),
     "B/Y[0] anchor": (
-        2.783,
+        3.35,
         "initial_wealth_ratio: household wealth to GDP, 2025 "
         "(transition-initial target, not a steady-state moment)",
     ),
@@ -78,13 +97,15 @@ def ss_moments(ss):
         m (dict): model moments, keyed like ``TARGETS``, plus untargeted
             ratios
     """
-    Y = float(np.squeeze(ss["Y"]))
 
     def sc(key):
         return float(np.sum(ss[key]))
 
+    Y_model = float(np.squeeze(ss["Y"]))
+    # GDP at market prices: the model's Y plus the consumption tax
+    Y = Y_model + sc("cons_tax_revenue")
     C = sc("C")
-    nx = Y - C - sc("I_total") - sc("I_g") - sc("G")
+    nx = Y_model - C - sc("I_total") - sc("I_g") - sc("G")
     m = {
         "PIT/Y": sc("iit_revenue") / Y,
         "payroll/Y": sc("payroll_tax_revenue") / Y,
@@ -110,5 +131,6 @@ def ss_moments(ss):
         "BQ/Y": sc("BQ") / Y,
         "r": sc("r"),
         "factor": sc("factor"),
+        "GDP mkt / Y": Y / Y_model,
     }
     return m

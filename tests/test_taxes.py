@@ -14,8 +14,12 @@ from importlib.resources import files
 import numpy as np
 import pytest
 
+from ogphl.targets import MODEL_PER_MARKET_GDP as K_MKT
+
 # OECD Revenue Statistics in Asia and the Pacific 2025, Philippines, 2023,
-# percent of GDP.
+# percent of GDP. Data shares are of GDP at market prices; OG-Core's Y
+# excludes the consumption tax, so a share of Y is the data share times
+# K_MKT (ogphl/targets.py).
 OECD_PIT = 0.0312
 OECD_SSC = 0.0278
 OECD_CIT = 0.0290
@@ -92,9 +96,10 @@ def test_gs_near_zero_below_exempt_threshold(gs_params):
 
 def test_payroll_rate_matches_ssc_collections(packaged):
     """tau_payroll = SSC collections / labor share of income, so payroll
-    revenue in the model equals actual SSC revenue as a share of GDP."""
+    revenue in the model equals actual SSC revenue as a share of GDP at
+    market prices."""
     labor_share = 1.0 - packaged["gamma"][0] - packaged["gamma_g"][0]
-    expected = OECD_SSC / labor_share
+    expected = OECD_SSC * K_MKT / labor_share
     assert packaged["tau_payroll"][0][0] == pytest.approx(expected, abs=5e-4)
 
 
@@ -111,7 +116,7 @@ def test_cit_is_statutory_rate_with_collections_adjustment(packaged):
     CIT proper (2.90) + BTr income from government capital (GOCC/BSP
     dividends, PAGCOR share, ~1.00) + unallocable income taxes (0.30)."""
     assert packaged["cit_rate"][0][0] == 0.25
-    assert 0.5 < packaged["adjustment_factor_for_cit_receipts"][0] < 0.7
+    assert 0.6 < packaged["adjustment_factor_for_cit_receipts"][0] < 0.8
 
 
 def test_wealth_tax_captures_property_type_taxes(packaged):
@@ -127,10 +132,11 @@ def test_zeta_k_is_level_validated_against_iip(packaged):
     """zeta_K is a marginal fill share tuned so the solved foreign share of
     capital matches the BSP IIP (~20%). It is the share of the gap between
     capital demanded at the world rate and domestically owned capital that
-    foreigners fill; with the return on capital at ~11% against a 5% world
-    rate that gap is large, so a small share delivers the IIP level. The
-    Chinn-Ito index (~0.4) measures legal openness, not this share."""
-    assert 0.05 <= packaged["zeta_K"][0] <= 0.10
+    foreigners fill; with the return on capital at ~8% against a 5% world
+    rate that gap is moderate, so a share near a sixth delivers the IIP
+    level. The Chinn-Ito index (~0.4) measures legal openness, not this
+    share."""
+    assert 0.12 <= packaged["zeta_K"][0] <= 0.22
 
 
 def test_bequest_tax_is_effective_not_statutory(packaged):
@@ -160,20 +166,18 @@ def test_fiscal_identity_alpha_g(packaged):
     the indirect side (7.94), and property-type taxes via the wealth tax
     (1.32). Near-term pensions: 2.28% of GDP today (SSS + GSIS + MUP),
     rising with covered retirees per worker to 3.4% by 2044 (2.87% average
-    over 2027-2044); public investment averages 5.15% of GDP."""
+    over 2027-2044); public investment averages 5.15% of GDP. Every term is
+    a share of GDP at market prices; alpha_G is a share of the model's Y, so
+    the identity is scaled by K_MKT."""
     r_gov_ss = 0.020
     g = np.exp(packaged["g_y_annual"]) * (1 + packaged["g_n_ss"]) - 1
-    pb_star = (r_gov_ss - g) / (1 + g) * packaged["debt_ratio_ss"]
+    pb_star = (r_gov_ss - g) / (1 + g) * 0.60
     revenue = OECD_PIT + OECD_SSC + 0.0420 + 0.0794 + 0.0132 + 0.0007
     near_term_pensions = 0.0287
-    consistent = (
-        revenue
-        - pb_star
-        - packaged["alpha_T"][0]
-        - 0.0515
-        - near_term_pensions
+    consistent = revenue - pb_star - 0.0448 - 0.0515 - near_term_pensions
+    assert packaged["alpha_G"][-1] == pytest.approx(
+        consistent * K_MKT, abs=0.006
     )
-    assert packaged["alpha_G"][-1] == pytest.approx(consistent, abs=0.006)
 
 
 def test_alpha_g_glides_from_program_stance_to_identity(packaged):
@@ -186,7 +190,7 @@ def test_alpha_g_glides_from_program_stance_to_identity(packaged):
     path = packaged["alpha_G"]
     assert len(path) > 1
     assert all(a > b for a, b in zip(path, path[1:]))
-    assert path == pytest.approx([0.1034, 0.0989, 0.0724], abs=1e-6)
+    assert path == pytest.approx([0.112318, 0.10743, 0.078644], abs=1e-6)
 
 
 def test_pensions_are_sss_db(packaged):
@@ -222,17 +226,18 @@ def test_pensions_are_sss_db(packaged):
 
 def test_alpha_i_is_the_mtff_infrastructure_program(packaged):
     """alpha_I maps the MTFF infrastructure program onto the 2025 start:
-    5.3% (2025), 5.1/5.1 (2026-27), 5.2 (2028+)."""
-    assert packaged["alpha_I"] == pytest.approx(
-        [0.053, 0.051, 0.051, 0.052], abs=1e-6
-    )
+    5.3% of GDP (2025), 5.1/5.1 (2026-27), 5.2 (2028+), as shares of Y."""
+    program = np.array([0.053, 0.051, 0.051, 0.052])
+    assert packaged["alpha_I"] == pytest.approx(program * K_MKT, abs=1e-6)
 
 
 def test_initial_public_capital_matches_icsd(packaged):
     """initial_Kg_ratio 0.38 is the ICSD/PIMA-informed public capital stock
     (~0.35-0.40 of GDP), the same figure subtracted in the initial-wealth
     construction -- the two must stay consistent."""
-    assert packaged["initial_Kg_ratio"] == pytest.approx(0.38, abs=1e-6)
+    assert packaged["initial_Kg_ratio"] == pytest.approx(
+        0.38 * K_MKT, abs=1e-6
+    )
 
 
 def test_initial_wealth_is_data_anchored(packaged):
@@ -244,7 +249,9 @@ def test_initial_wealth_is_data_anchored(packaged):
     than its steady-state counterpart and retirees consume the windfall."""
     data_target = (3.97 - 0.38) * 0.8 + 0.8 * 0.6
     assert data_target == pytest.approx(3.35, abs=0.005)
-    assert packaged["initial_wealth_ratio"] == pytest.approx(3.35, abs=1e-6)
+    assert packaged["initial_wealth_ratio"] == pytest.approx(
+        3.35 * K_MKT, abs=1e-6
+    )
 
 
 def test_delta_is_measured_depreciation(packaged):
@@ -264,11 +271,12 @@ def test_beta_is_tuned_to_private_capital(packaged):
     matches PWT 2023 total K/Y 3.97 less ICSD public capital ~0.38 = 3.59,
     which with the IIP foreign share and domestically-held debt also puts
     household wealth at the 3.35 initial-wealth anchor. Uniform across
-    lifetime-income groups. Tuned with the public pension system on.
-    Replaces the US default 0.96."""
+    lifetime-income groups. Tuned with the public pension system on, the
+    ILOSTAT capital share and GDP at market prices. Replaces the US default
+    0.96."""
     beta = packaged["beta_annual"]
     assert len(set(beta)) == 1
-    assert 0.82 < beta[0] < 0.87
+    assert 0.87 < beta[0] < 0.91
 
 
 def test_start_year_is_last_observed_year(packaged):

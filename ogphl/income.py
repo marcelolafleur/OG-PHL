@@ -237,21 +237,39 @@ def get_e_interp(E, S, J, lambdas, age_wgts, gini_to_match=39.3, plot=False):
 # Both profiles are National Transfer Accounts labour income ("Labor Income",
 # "Smooth Mean"), fetched by scripts/fetch_nta_age_profiles.py: the
 # Philippines' latest (2015, prepared by M. Abrigo) against the nearest US
-# year (2011). NTA labour income is per person at each age, so the factor
-# carries participation differences as well as earnings differences.
+# year (2011). NTA labour income is per person at each age; the model's e is
+# pay per hour and its labour supply is hours per person (ogphl/labor.py), so
+# each profile is divided by that year's hours per person from ILOSTAT before
+# the ratio is taken. Otherwise hours would count twice: once in e and again
+# in the calibrated labour supply.
 # ---------------------------------------------------------------------------
 
 NTA_DIR = os.path.join(CUR_PATH, "data")
+
+# ILOSTAT five-year bands placed at their midpoint; the open 65+ band at 67
+HOURS_BAND_MIDPOINTS = {
+    "15-19": 17,
+    "20-24": 22,
+    "25-29": 27,
+    "30-34": 32,
+    "35-39": 37,
+    "40-44": 42,
+    "45-49": 47,
+    "50-54": 52,
+    "55-59": 57,
+    "60-64": 62,
+    "65+": 67,
+}
 
 # Ages over which each profile is normalised before the ratio is taken. NTA
 # reports levels in each country's own currency, so only the SHAPE transfers;
 # normalising over prime working ages makes the two comparable.
 NORMALISE_AGES = (20, 65)
 
-# Above this age both profiles approach zero and their ratio becomes noise, so
-# the factor is held flat at its value here rather than dividing small by
-# small.
-FACTOR_TAPER_AGE = 72
+# The factor is held flat from this age: it is the midpoint of ILOSTAT's open
+# 65+ band, beyond which hours by age are not observed, and above it both NTA
+# profiles approach zero and their ratio becomes noise.
+FACTOR_TAPER_AGE = 67
 
 
 def _load_nta_profile(iso):
@@ -277,15 +295,47 @@ def _load_nta_profile(iso):
     return out
 
 
+def hours_per_person(iso, year, ages):
+    """
+    Weekly hours worked per person by single year of age: the ILOSTAT
+    employment-to-population ratio times the mean weekly hours of the
+    employed, written by ``scripts/fetch_ilo_hours_by_age.py``. Bands sit at
+    their midpoints; ages outside them take the nearest band's value.
+
+    Args:
+        iso (str): "PHL" or "USA"
+        year (int): survey year
+        ages (array_like): ages to evaluate at
+
+    Returns:
+        numpy array: hours per person per week at each age
+    """
+    path = os.path.join(NTA_DIR, "ilo_hours_by_age.csv")
+    x, y = [], []
+    with open(path, encoding="utf-8") as fh:
+        for row in csv.DictReader(fh):
+            if row["country"] == iso and int(row["year"]) == year:
+                x.append(HOURS_BAND_MIDPOINTS[row["age_band"]])
+                y.append(
+                    float(row["emp_pop_ratio"])
+                    * float(row["mean_weekly_hours_employed"])
+                )
+    if not x:
+        raise ValueError(f"No ILOSTAT hours for {iso} {year}")
+    order = np.argsort(x)
+    return np.interp(ages, np.array(x)[order], np.array(y)[order])
+
+
 def get_age_shape_factor(E, S):
     """
-    Ratio of the Philippines' to the USA's labour-income age profile, by model
-    age.
+    Ratio of the Philippines' to the USA's labour income per hour by age, by
+    model age.
 
-    Philippine labour income peaks at 39, against 49 in the US: earnings start
-    earlier (factor 2.0 at 20, 1.29 at 30) and fall much sooner, with
-    informality and a pension age of 60 (0.76 at 55, 0.54 at 65), once both
-    profiles are put on a common scale.
+    Philippine labour income per person peaks at 39, against 49 in the US.
+    Hours per person are close to the US's in the prime ages but twice as
+    high after 65, so per hour the Philippine profile falls further still:
+    the factor is 1.78 at 20, 1.38 at 30, 0.77 at 55 and 0.25 from 67, once
+    both profiles are put on a common scale.
 
     Args:
         E (int): age at which agents become economically active
@@ -299,7 +349,9 @@ def get_age_shape_factor(E, S):
     phl_year = max(phl)
     # Nearest-year comparator, as the method specifies.
     usa_year = min(usa, key=lambda y: abs(y - phl_year))
-    p, u = phl[phl_year], usa[usa_year]
+    all_ages = np.arange(len(phl[phl_year]))
+    p = phl[phl_year] / hours_per_person("PHL", phl_year, all_ages)
+    u = usa[usa_year] / hours_per_person("USA", usa_year, all_ages)
 
     lo, hi = NORMALISE_AGES
     p_norm = p / np.nanmean(p[lo:hi])

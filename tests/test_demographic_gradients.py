@@ -11,16 +11,34 @@ from ogphl import income
 from ogphl.demographic_gradients import (
     adult_mortality_tilts,
     demographic_gradients,
+    fertility_age_offsets,
 )
+
+# fixed rates so the tests need no data download: 4% births per person at
+# every age, 1% mortality, 2% infant mortality
+RATES = (np.full(100, 0.04), np.full(100, 0.01), 0.02)
 
 
 def test_dhs_tilts_are_the_2022_philippine_values():
     """Fertility and infant mortality tilts are the Philippines' DHS 2022
-    wealth-quintile slopes (EAPD-DRB/Demographic-Gradients), per percentile
-    point."""
-    g = demographic_gradients(20, 80, 320, 2025, 0.0313)
-    assert g["fert_gradient"] == pytest.approx(-0.986426 / 100, rel=1e-5)
-    assert g["infmort_gradient"] == pytest.approx(-1.603953 / 100, rel=1e-5)
+    wealth-quintile slopes (EAPD-DRB/Demographic-Gradients), passed as
+    tilt / (100 x (1 - p)); fertility adds the pooled age offsets."""
+    g = demographic_gradients(20, 80, 320, 2025, 0.0313, rates=RATES)
+    ages = np.arange(100)
+    fert = (-0.986426 + fertility_age_offsets(ages)) / (100 * 0.96)
+    assert g["fert_gradient"] == pytest.approx(fert, rel=1e-5)
+    assert g["infmort_gradient"] == pytest.approx(
+        -1.603953 / (100 * 0.98), rel=1e-5
+    )
+
+
+def test_fertility_gradient_is_steepest_for_teenagers():
+    """The pooled offsets make the teenage gradient about twice the TFR
+    tilt and the early-thirties one about two thirds of it."""
+    off = fertility_age_offsets([17, 32, 47, 10, 60])
+    assert off[0] == pytest.approx(-0.7775, abs=1e-4)
+    assert off[1] == pytest.approx(0.3294, abs=1e-4)
+    assert off[3] == off[0] and off[4] == off[2]
 
 
 def test_adult_mortality_follows_the_income_rule():
@@ -39,7 +57,9 @@ def test_adult_mortality_follows_the_income_rule():
 def test_mortality_gradient_shape_and_ages():
     """By period and single age; zero at age 0 (infant mortality has its own
     gradient) and at 75 and over (outside the rule's age bands)."""
-    m = demographic_gradients(20, 80, 320, 2025, 0.0313)["mort_gradient"]
+    m = demographic_gradients(20, 80, 320, 2025, 0.0313, rates=RATES)[
+        "mort_gradient"
+    ]
     assert m.shape == (400, 100)
     assert np.all(m[:, 0] == 0) and np.all(m[:, 75:] == 0)
     assert np.all(m[:, 15:75] < 0)
@@ -54,16 +74,18 @@ def test_earnings_gini_target_is_the_2023_income_gini():
     assert default.default == 39.3
 
 
-def test_earnings_age_shape_is_the_nta_ratio():
+def test_earnings_age_shape_is_the_nta_ratio_per_hour():
     """The US earnings curves are reshaped by the ratio of the Philippine to
-    the US NTA labour-income profile (2015 vs the nearest US year, 2011),
-    normalised over ages 20-64 and held flat from 72. Philippine labour
-    income peaks at 39 against 49 in the US."""
+    the US NTA labour income per hour worked (2015 vs the nearest US year,
+    2011, each divided by that year's ILOSTAT hours per person), normalised
+    over ages 20-64 and held flat from 67. Philippine labour income peaks at
+    39 against 49 in the US."""
     f = income.get_age_shape_factor(20, 80)
     assert f.shape == (80,)
-    assert f[0] == pytest.approx(2.011, abs=0.005)
-    assert f[45] == pytest.approx(0.543, abs=0.005)
-    assert np.all(f[52:] == f[52])
+    assert f[0] == pytest.approx(1.778, abs=0.005)
+    assert f[45] == pytest.approx(0.380, abs=0.005)
+    assert np.all(f[47:] == f[47])
+    assert np.all(np.diff(f) <= 0)
     phl = income._load_nta_profile("PHL")
     assert max(phl) == 2015
     assert 20 + int(np.nanargmax(phl[2015][20:80])) == 39

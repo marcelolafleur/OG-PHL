@@ -6,6 +6,8 @@ import importlib.resources
 import json
 
 import numpy as np
+
+from ogphl.labor import MAX_CHI_N
 import pytest
 
 from ogphl.create_multisector_calibration import build_multisector_params
@@ -116,7 +118,8 @@ def test_chi_units_conversion():
     chi_b and chi_n in the overlay are the base weights scaled by
     k**(sigma-1), the exact FOC-preserving conversion for the multi-good
     composite-consumption units (k is the constant OG-Core's unnormalized
-    price index picks up).
+    price index picks up), with chi_n held at OG-Core's cap where the
+    scaled weight would exceed it.
     """
     base = _load_packaged("ogphl_default_parameters.json")
     built = build_multisector_params()
@@ -128,5 +131,7 @@ def test_chi_units_conversion():
         built["chi_b"], np.array(base["chi_b"]) * scale, rtol=1e-12
     )
     np.testing.assert_allclose(
-        built["chi_n"], np.array(base["chi_n"]) * scale, rtol=1e-12
+        built["chi_n"],
+        np.minimum(np.array(base["chi_n"]) * scale, MAX_CHI_N),
+        rtol=1e-12,
     )

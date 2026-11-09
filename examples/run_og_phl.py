@@ -13,6 +13,7 @@ from ogcore import output_tables as ot
 from ogcore import output_plots as op
 from ogcore.execute import runner
 from ogcore.utils import safe_read_pickle
+from ogphl import warm_start
 
 # Use a custom matplotlib style file for plots
 plt.style.use("ogcore.OGcorePlots")
@@ -55,6 +56,13 @@ def main():
     # To refresh the API-sourced values (UN demographics, the earnings
     # profile, World Bank g_y_annual), run `python -m ogphl.update_baseline`,
     # review the diff of the JSON, and commit it.
+
+    # Seed the steady state from the shipped solved state
+    # (ogphl/warm_start.py); without a seed it cold-starts.
+    if warm_start.enable():
+        print("Warm start enabled (ogphl/data/ss_warm_start.pkl).")
+    else:
+        print("No warm-start seed found; cold-starting the steady state.")
 
     # Run model
     start_time = time.time()

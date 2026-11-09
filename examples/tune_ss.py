@@ -10,6 +10,12 @@ It sets dials and nothing more. Fold settled values into the packaged JSON,
 commit, re-install, and take every reported number from run_og_phl.py.
 
     python examples/tune_ss.py [overrides.json] [--label NAME]
+                               [--warm SS_vars.pkl]
+
+Without --warm the solve starts from the shipped seed, as the example does
+(ogphl/warm_start.py). --warm starts it from any solved steady state for
+nearby parameters instead; use it while moving parameters far from the
+seed's.
 """
 
 import argparse
@@ -19,6 +25,8 @@ import multiprocessing
 import os
 import time
 
+import pickle
+
 import numpy as np
 from distributed import Client
 from ogcore.execute import runner
@@ -26,12 +34,14 @@ from ogcore.parameters import Specifications
 from ogcore.utils import safe_read_pickle
 
 from ogphl.targets import TARGETS, ss_moments
+from ogphl.warm_start import enable, solve_ss_from
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("overrides", nargs="?", default=None)
     ap.add_argument("--label", default="tune")
+    ap.add_argument("--warm", default=None)
     args = ap.parse_args()
 
     num_workers = min(multiprocessing.cpu_count(), 7)
@@ -59,11 +69,18 @@ def main():
     print(f"label {args.label}; overrides {json.dumps(overrides)}")
 
     t0 = time.time()
-    runner(p, time_path=False, client=client)
+    if args.warm:
+        ss = solve_ss_from(p, safe_read_pickle(args.warm), client=client)
+        os.makedirs(os.path.join(out, "SS"), exist_ok=True)
+        with open(os.path.join(out, "SS", "SS_vars.pkl"), "wb") as f:
+            pickle.dump(ss, f)
+    else:
+        enable()
+        runner(p, time_path=False, client=client)
+        ss = safe_read_pickle(os.path.join(out, "SS", "SS_vars.pkl"))
     secs = time.time() - t0
     client.close()
 
-    ss = safe_read_pickle(os.path.join(out, "SS", "SS_vars.pkl"))
     model = ss_moments(ss)
     rc = float(np.max(np.abs(ss["resource_constraint_error"])))
     print(

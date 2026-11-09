@@ -21,6 +21,7 @@ import pytest
 from ogcore import aggregates as aggr
 from ogcore.parameters import Specifications
 
+from ogphl.targets import MODEL_PER_MARKET_GDP as K_MKT
 from ogphl.update_baseline_demographics import flat_share_g_RM
 
 # BSP full-year 2025: cash remittances US$35.63bn, which BSP reports as 7.3%
@@ -53,17 +54,19 @@ def params(packaged):
 
 
 def test_alpha_rm_matches_bsp_personal_remittances(packaged):
-    """The level is personal remittances / GDP, derived off BSP's own ratio."""
+    """The level is personal remittances / GDP, derived off BSP's own ratio,
+    as a share of the model's Y (GDP before consumption taxes)."""
     derived = BSP_CASH_SHARE_OF_GDP * (BSP_PERSONAL_USD_BN / BSP_CASH_USD_BN)
     assert derived == pytest.approx(EXPECTED_ALPHA_RM, abs=5e-5)
-    assert packaged["alpha_RM_1"] == EXPECTED_ALPHA_RM
-    assert packaged["alpha_RM_T"] == EXPECTED_ALPHA_RM
+    model = EXPECTED_ALPHA_RM * K_MKT
+    assert packaged["alpha_RM_1"] == pytest.approx(model, abs=1e-6)
+    assert packaged["alpha_RM_T"] == pytest.approx(model, abs=1e-6)
 
 
 def test_alpha_rm_is_in_bsp_personal_remittance_band(packaged):
     """BSP research puts personal remittances at 8-9% of GDP since 2017 and
     cash at 7-8%. Guards against silently reverting to the cash measure."""
-    assert 0.080 <= packaged["alpha_RM_1"] <= 0.090
+    assert 0.080 <= packaged["alpha_RM_1"] / K_MKT <= 0.090
 
 
 def test_no_remittance_transition_path(packaged):
