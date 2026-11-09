@@ -57,14 +57,15 @@ def _opener():
     return op
 
 
-def fetch_country(country, year_lo, year_hi):
+def fetch_country(country, year_lo, year_hi, var_name=VAR_NAME):
     """
-    Fetch one country's labour-income age profile as raw CSV text.
+    Fetch one country's age profile of an NTA variable as raw CSV text.
 
     Args:
         country (str): NTA country name, e.g. "Philippines"
         year_lo (int): first year of the search window
         year_hi (int): last year of the search window
+        var_name (str): NTA variable name, labour income by default
 
     Returns:
         str: CSV text, one row per matched age profile
@@ -74,7 +75,7 @@ def fetch_country(country, year_lo, year_hi):
 
     query = [
         ("countries", country),
-        ("var-names", VAR_NAME),
+        ("var-names", var_name),
         ("var-types", VAR_TYPE),
         ("year-lo", str(year_lo)),
         ("year-hi", str(year_hi)),
@@ -123,6 +124,16 @@ def main():
             fh.write(csv_text)
         n = max(0, csv_text.count("\n") - 1)
         print(f"  {country:16s} -> {os.path.relpath(path)}  ({n} record(s))")
+    # Private asset income by age: the age shape of household wealth used
+    # for the initial distribution of wealth (ogphl/initial_wealth.py)
+    csv_text = fetch_country(
+        "Philippines", 1990, 2025, var_name="Private Asset Income"
+    )
+    path = os.path.join(OUT_DIR, "nta_private_asset_income_PHL.csv")
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write(csv_text)
+    n = max(0, csv_text.count("\n") - 1)
+    print(f"  {'Philippines':16s} -> {os.path.relpath(path)}  ({n} record(s))")
 
 
 if __name__ == "__main__":

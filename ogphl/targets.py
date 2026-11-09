@@ -65,25 +65,73 @@ TARGETS = {
         "state (a mature system in the long-run population)",
     ),
     # External
-    "K_f/K": (0.20, "BSP International Investment Position, inward share"),
     "RM/Y": (
         0.0812,
         "BSP 2025 personal remittances US$39.62bn (BPM6), the household "
         "income measure; the published 7.3% ratio is the narrower cash "
         "measure",
     ),
-    # Production and households
-    "K/Y": (
+    # Production and households: private capital and its foreign share are
+    # scored in the first transition period (TRANSITION_TARGETS), where the
+    # data describe today's population, and reported here as outcomes
+}
+
+
+# Moments of the first transition period (2025), scored from TPI_vars.pkl.
+# The discount factor and the foreign-capital fill share are tuned to these
+# rather than to steady-state ratios: the data describe the Philippines
+# today, and its population is far younger than the steady state's.
+TRANSITION_TARGETS = {
+    "(I+I_g)/Y[2025]": (
+        0.236,
+        "gross fixed capital formation, World Bank WDI 2024; beta",
+    ),
+    "K_f/K[2025]": (
+        0.20,
+        "BSP International Investment Position, inward share; zeta_K",
+    ),
+    "B/Y[2025]": (3.35, "initial_wealth_ratio construction (anchor)"),
+    "K/Y[2025]": (
         3.59,
         "PWT 11 capital stock 2023 (3.97) less public capital ~0.38 (IMF "
-        "ICSD); delta and beta are set to it",
-    ),
-    "B/Y[0] anchor": (
-        3.35,
-        "initial_wealth_ratio: household wealth to GDP, 2025 "
-        "(transition-initial target, not a steady-state moment)",
+        "ICSD); set by the initial wealth anchor and the foreign share",
     ),
 }
+
+
+def tpi_moments(tpi, t=0):
+    """
+    Transition moments in period t, as shares of GDP at market prices.
+
+    Args:
+        tpi (dict): a solved ``TPI_vars.pkl``
+        t (int): model period, 0 for the start year
+
+    Returns:
+        m (dict): moments keyed like ``TRANSITION_TARGETS``, plus untargeted
+            ratios
+    """
+
+    def at(key):
+        return float(np.squeeze(tpi[key])[t])
+
+    Y = at("Y") + at("cons_tax_revenue")
+    year = "[2025]" if t == 0 else f"[t={t}]"
+    return {
+        "(I+I_g)/Y" + year: (at("I_total") + at("I_g")) / Y,
+        "K_f/K" + year: at("K_f") / at("K"),
+        "K/Y" + year: at("K") / Y,
+        "B/Y" + year: at("B") / Y,
+        "C/Y purch." + year: (at("C") + at("cons_tax_revenue")) / Y,
+        "pensions/Y" + year: at("agg_pension_outlays") / Y,
+        "D/Y" + year: at("D") / Y,
+        "primary balance/Y" + year: (
+            at("total_tax_revenue") - at("total_primary_government_outlays")
+        )
+        / Y,
+        "total tax/Y" + year: at("total_tax_revenue") / Y,
+        "r" + year: at("r"),
+    }
 
 
 def ss_moments(ss):

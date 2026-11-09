@@ -10,7 +10,9 @@ from ogphl.targets import (
     CONS_TAX_SHARE,
     MODEL_PER_MARKET_GDP,
     TARGETS,
+    TRANSITION_TARGETS,
     ss_moments,
+    tpi_moments,
 )
 
 SS_KEYS = [
@@ -74,3 +76,13 @@ def test_market_to_model_factor_matches_the_cons_tax_target():
     tax = CONS_TAX_SHARE * MODEL_PER_MARKET_GDP  # as a share of Y
     assert 1 + tax == pytest.approx(MODEL_PER_MARKET_GDP)
     assert TARGETS["cons tax/Y"][0] == CONS_TAX_SHARE
+
+
+def test_transition_targets_have_model_moments():
+    """The discount factor and the foreign-capital share are tuned to the
+    first transition period; each target has a moment there."""
+    keys = SS_KEYS + ["total_primary_government_outlays"]
+    tpi = {k: np.ones(5) for k in keys}
+    moments = tpi_moments(tpi)
+    for name in TRANSITION_TARGETS:
+        assert name in moments, name

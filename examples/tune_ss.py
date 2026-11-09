@@ -10,12 +10,14 @@ It sets dials and nothing more. Fold settled values into the packaged JSON,
 commit, re-install, and take every reported number from run_og_phl.py.
 
     python examples/tune_ss.py [overrides.json] [--label NAME]
-                               [--warm SS_vars.pkl]
+                               [--warm SS_vars.pkl] [--tpi]
 
 Without --warm the solve starts from the shipped seed, as the example does
 (ogphl/warm_start.py). --warm starts it from any solved steady state for
 nearby parameters instead; use it while moving parameters far from the
-seed's.
+seed's. --tpi also solves the baseline transition path and prints the
+first-period moments the discount factor and the foreign-capital share are
+tuned to (ogphl/targets.py, TRANSITION_TARGETS).
 """
 
 import argparse
@@ -33,7 +35,12 @@ from ogcore.execute import runner
 from ogcore.parameters import Specifications
 from ogcore.utils import safe_read_pickle
 
-from ogphl.targets import TARGETS, ss_moments
+from ogphl.targets import (
+    TARGETS,
+    TRANSITION_TARGETS,
+    ss_moments,
+    tpi_moments,
+)
 from ogphl.warm_start import enable, solve_ss_from
 
 
@@ -42,6 +49,7 @@ def main():
     ap.add_argument("overrides", nargs="?", default=None)
     ap.add_argument("--label", default="tune")
     ap.add_argument("--warm", default=None)
+    ap.add_argument("--tpi", action="store_true")
     args = ap.parse_args()
 
     num_workers = min(multiprocessing.cpu_count(), 7)
@@ -76,10 +84,18 @@ def main():
             pickle.dump(ss, f)
     else:
         enable()
-        runner(p, time_path=False, client=client)
+        runner(p, time_path=args.tpi, client=client)
         ss = safe_read_pickle(os.path.join(out, "SS", "SS_vars.pkl"))
     secs = time.time() - t0
     client.close()
+    if args.tpi:
+        tpi = safe_read_pickle(os.path.join(out, "TPI", "TPI_vars.pkl"))
+        tm = tpi_moments(tpi)
+        print(f"\n{'2025 moment':22s} {'model':>8s} {'data':>8s}")
+        for k, (target, src) in TRANSITION_TARGETS.items():
+            print(f"{k:22s} {tm[k]:8.4f} {target:8.4f}  {src}")
+        for k in sorted(set(tm) - set(TRANSITION_TARGETS)):
+            print(f"{k:22s} {tm[k]:8.4f}")
 
     model = ss_moments(ss)
     rc = float(np.max(np.abs(ss["resource_constraint_error"])))
@@ -99,6 +115,7 @@ def main():
         json.dump(
             {
                 "model": model,
+                "transition": tpi_moments(tpi) if args.tpi else None,
                 "rc": rc,
                 "seconds": secs,
                 "overrides": overrides,

@@ -129,13 +129,14 @@ def test_wealth_tax_captures_property_type_taxes(packaged):
 
 
 def test_zeta_k_is_level_validated_against_iip(packaged):
-    """zeta_K is a marginal fill share tuned so the solved foreign share of
-    capital matches the BSP IIP (~20%). It is the share of the gap between
-    capital demanded at the world rate and domestically owned capital that
-    foreigners fill; with the return on capital at ~8% against a 5% world
-    rate that gap is moderate, so a share near a sixth delivers the IIP
-    level. The Chinn-Ito index (~0.4) measures legal openness, not this
-    share."""
+    """zeta_K is a marginal fill share tuned so the foreign share of capital
+    in the first transition year, 2025, matches the BSP IIP (~20%); the
+    steady state's share (about 14%) is an outcome. It is the share of the
+    gap between capital demanded at the world rate and domestically owned
+    capital that foreigners fill; with the return on capital at ~8% against
+    a 5% world rate that gap is moderate, so a share of about 0.15 delivers
+    the IIP level. The Chinn-Ito index (~0.4) measures legal openness, not
+    this share."""
     assert 0.12 <= packaged["zeta_K"][0] <= 0.22
 
 
@@ -197,7 +198,7 @@ def test_alpha_g_glides_from_program_stance_to_identity(packaged):
     assert len(path) == 5
     assert all(a > b for a, b in zip(path, path[1:]))
     assert path == pytest.approx(
-        [0.110084, 0.10507, 0.094077, 0.083785, 0.073323], abs=1e-6
+        [0.102089, 0.09963, 0.090542, 0.081657, 0.073277], abs=1e-6
     )
 
 
@@ -218,9 +219,9 @@ def test_pensions_are_sss_db(packaged):
     coverage because the covered groups live longer): 6.97% of GDP in the
     steady state. Replaces the US system, which the repo had switched
     off with zero benefit rates while collecting contributions. The mature
-    scale applies from 2050; from 2025 it rises linearly from 77% of it, so
+    scale applies from 2050; from 2025 it rises linearly from 80% of it, so
     outlays start at today's 2.28% of GDP (the maturing of the scheme: a
-    mature system from the start paid 2.95%)."""
+    mature system from the start pays about 2.8%)."""
     assert packaged["pension_system"] == "Defined Benefits"
     assert packaged["retirement_age"] == [60]
     assert packaged["yr_contrib"] == 40
@@ -236,7 +237,7 @@ def test_pensions_are_sss_db(packaged):
     assert 0.8 < scale <= 1.2
     phase = [row[-1] / scale for row in rows]
     assert len(rows) == 26
-    assert phase[0] == pytest.approx(0.7728, abs=1e-4)
+    assert phase[0] == pytest.approx(0.8007, abs=1e-4)
     assert all(a < b for a, b in zip(phase, phase[1:]))
 
 
@@ -282,17 +283,18 @@ def test_delta_is_measured_depreciation(packaged):
     assert packaged["delta_annual"] == 0.026
 
 
-def test_beta_is_tuned_to_private_capital(packaged):
-    """beta_annual is tuned (not sourced) so the steady state's private K/Y
-    matches PWT 2023 total K/Y 3.97 less ICSD public capital ~0.38 = 3.59,
-    which with the IIP foreign share and domestically-held debt also puts
-    household wealth at the 3.35 initial-wealth anchor. Uniform across
-    lifetime-income groups. Tuned with the public pension system on, the
-    ILOSTAT capital share and GDP at market prices. Replaces the US default
-    0.96."""
+def test_beta_is_tuned_to_first_year_investment(packaged):
+    """beta_annual is tuned (not sourced) so fixed investment in the first
+    transition year, 2025, is the national accounts' 23.6% of GDP (World
+    Bank, 2024), with household wealth at its data anchor and the initial
+    distribution of wealth by age from the NTA. It is not tuned to the
+    steady state's capital stock: the data describe today's young
+    population, and the steady state's capital-output ratio (about 3.7) is an
+    outcome of aging. Uniform across lifetime-income groups. Replaces the US
+    default 0.96."""
     beta = packaged["beta_annual"]
     assert len(set(beta)) == 1
-    assert 0.87 < beta[0] < 0.91
+    assert 0.88 < beta[0] < 0.93
 
 
 def test_start_year_is_last_observed_year(packaged):
