@@ -118,7 +118,12 @@ from ogcore import output_tables as ot
 from ogcore import output_plots as op
 from ogcore.utils import safe_read_pickle
 
-from ogphl.constants import PROD_DICT
+from ogphl.constants import (
+    PROD_DICT,
+    PUBLIC_CAPITAL_SHARE,
+    TOTAL_CAPITAL_SHARE,
+)
+from ogphl import warm_start
 
 # Use a custom matplotlib style file for plots (matches the other examples)
 plt.style.use("ogcore.OGcorePlots")
@@ -130,7 +135,7 @@ CUR_DIR = os.path.dirname(os.path.realpath(__file__))
 # gamma was rescaled to, so morphing from this anchor to the calibrated gamma
 # holds the aggregate constant and only varies the cross-industry dispersion --
 # which is what makes the homotopy converge.
-ANCHOR_GAMMA = 0.53785
+ANCHOR_GAMMA = TOTAL_CAPITAL_SHARE - PUBLIC_CAPITAL_SHARE
 
 
 def _load_params(name):
@@ -201,6 +206,10 @@ def solve_ss_by_continuation(work_dir, dt0=0.125, dt_min=0.01):
         shutil.rmtree(work_dir)
 
     # Homogeneous baseline: flat gamma and Z = 1 (equilibrium prices all 1).
+    # It is the single-industry economy, so it starts from the single-industry
+    # model's shipped solved state (ogphl/warm_start.py); OG-Core's flat
+    # starting guesses do not solve this calibration.
+    warm_start.enable()
     base_dir = os.path.join(work_dir, "anchor")
     os.makedirs(os.path.join(base_dir, "SS"), exist_ok=True)
     p = build_specifications(
@@ -275,8 +284,8 @@ def validate_ss(p, ss):
     )
     print(f"K_f/K (foreign-owned capital share) = {s(ss['K_f']) / K:.3f}")
     print(
-        "(single-industry baseline reference: K/Y 4.29, C/Y 0.51, "
-        "r 0.0708, K_f/K 0.26)"
+        "(single-industry steady state, same units: K/Y 4.01, C/Y 0.86 "
+        "at purchaser prices, r 0.0801, K_f/K 0.14)"
     )
     print("\nPer-industry steady state:")
     print(
