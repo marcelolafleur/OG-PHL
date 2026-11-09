@@ -33,7 +33,7 @@ We set $\zeta_D = 0.2$. This is calibrated to equal `initial_foreign_debt_ratio`
 
 ### Foreign holdings of excess capital
 
-We set $\zeta_K = 0.172$. This parameter governs the share of the gap between domestically-supplied capital and the capital demanded at the world interest rate that foreign investors fill, so it is effectively the degree of openness of the capital account at the margin. It is a *marginal* fill share, not a directly measured quantity, so we calibrate it by the level it produces: $\zeta_K = 0.172$ puts the solved steady-state foreign-owned share of the capital stock at 20%, matching the Bangko Sentral ng Pilipinas International Investment Position. With the return on capital at 8.3% against a 5% world rate, the capital that would be demanded at the world rate exceeds what Philippine households own, and foreigners filling about a sixth of that gap supply a fifth of the capital stock. The normalized Chinn-Ito capital-account openness index (roughly 0.4, [Chinn-Ito index](https://web.pdx.edu/~ito/Chinn-Ito_website.htm)) measures legal openness rather than this share, and is not a target. $\zeta_K$ is tuned jointly with the discount factor (see {ref}`Chap_HouseholdCalib`): together they set private capital and its foreign share, and they moved together when the capital share and the GDP basis were corrected (the previous pair was 0.0705 with a return on capital of 11.4%). Re-validate the solved foreign share after any tax-side or saving-side change.
+We set $\zeta_K = 0.1453$. This parameter governs the share of the gap between domestically-supplied capital and the capital demanded at the world interest rate that foreign investors fill, so it is effectively the degree of openness of the capital account at the margin. It is a *marginal* fill share, not a directly measured quantity, so we calibrate it by the level it produces: it puts the foreign-owned share of the capital stock in 2025, the first year of the transition, at the Bangko Sentral ng Pilipinas International Investment Position's 20%. Like the discount factor, it is tuned to the first year rather than the steady state, because the IIP describes today's economy (see {ref}`Chap_HouseholdCalib`); in 2025 it moves only the foreign share, since domestic wealth is anchored to data, while the discount factor moves investment. The foreign share then rises to about 28% by 2040 as the return on capital climbs with the working-age population, and settles at 14% in the steady state, where an aged population owns more of the capital itself. The normalized Chinn-Ito capital-account openness index (roughly 0.4, [Chinn-Ito index](https://web.pdx.edu/~ito/Chinn-Ito_website.htm)) measures legal openness rather than this share, and is not a target. Re-validate the 2025 foreign share after any tax-side or saving-side change.
 
 It also restores a domestic-capital buffer the transition needs: at $\zeta_K = 0.9$ domestic capital ($K_d = B - D_d$) is only ~4% of the stock, so the $K_d \geq 0$ constraint binds along the path and the resource constraint fails to close; at 0.4 it clears.
 
@@ -77,13 +77,13 @@ Along the transition $\alpha_G$ binds for the first $t_{G1} = 20$ years, so it i
 
 | Years | $\alpha_G$ (% of GDP) | Anchor |
 |---|---|---|
-| 2025 | 10.1 | programmed primary balance −2.51% |
-| 2026 | 9.7 | −2.26% |
-| 2027 | 8.7 | −1.59% |
-| 2028 | 7.7 | −1.03% |
-| 2029–2044 | 6.8 | debt back at 60% of GDP in 2044 |
+| 2025 | 9.4 | programmed primary balance −2.51% |
+| 2026 | 9.2 | −2.26% |
+| 2027 | 8.3 | −1.59% |
+| 2028 | 7.5 | −1.03% |
+| 2029–2044 | 6.7 | debt back at 60% of GDP in 2044 |
 
-The programmed primary balances are the national government's deficit less interest in the DBM Budget of Expenditures and Sources of Financing for FY 2026, Table A.2 (`ogphl/data/fiscal_program_PHL.csv`). Each year's value is the spending share that reproduces it given the model's own revenue and pension outlays on the solved transition, and the solved baseline lands on all four to the hundredth of a point. From 2029, when the program ends, spending holds the level that returns debt to 60% of GDP by 2044, the year before the budget rule takes over. (Holding instead the level whose average primary balance equals $pb^*$ ran surpluses early and paid debt down to 49% of GDP, because transition revenue starts high and falls.)
+The programmed primary balances are the national government's deficit less interest in the DBM Budget of Expenditures and Sources of Financing for FY 2026, Table A.2 (`ogphl/data/fiscal_program_PHL.csv`). Each year's value is the spending share that reproduces it given the model's own revenue and pension outlays on the solved transition, and the solved baseline lands within 0.02 points of all four (−2.49, −2.24, −1.58, −1.03). From 2029, when the program ends, spending holds the level that returns debt to 60% of GDP by 2044, the year before the budget rule takes over. (Holding instead the level whose average primary balance equals $pb^*$ ran surpluses early and paid debt down to 49% of GDP, because transition revenue starts high and falls.)
 
 For comparison, the DBM's Budget of Expenditures and Sources of Financing implies a goods-and-services share of about 13% of GDP on a primary basis (FY 2026 disbursements of 21.5% of GDP less transfers and interest). The model's lower path is the consolidation the program itself plans and the cost of the transition's revenue dip (below): the program's deficit falls from 5.5% of GDP in 2025 to 4.3% in 2028. Two structural points matter for anyone recalibrating this block. OG-Core's steady-state closure makes $G$ the residual of the budget identity regardless of the input $\alpha_G$, so an inconsistent value only destabilizes the *transition*, where $\alpha_G$ binds and excess spending compounds into the debt-elastic premium. And revenue errors mask spending errors: an earlier calibration paired $\alpha_G \approx 0.17$ with a flat 20% income tax that over-collected by a factor of six; the two errors cancelled in the steady state while distorting every household decision in the model.
 
@@ -101,18 +101,22 @@ This calibration instead anchors initial wealth to data with `initial_wealth_rat
 | + domestically-held government debt | +0.48 | BTr: 80% domestic share × 0.60 debt ratio |
 | **Household wealth to GDP, 2025** | **≈ 3.35** | |
 
-The capital-side construction is the model-consistent measure — the model forces $B(0) = K_d(0) + D_d(0)$ — and household-net-worth estimates (UBS Global Wealth Report class, ~2.3–2.6× GDP) sit below it, as expected where surveys undercount real property. The steady state, solved without targeting household wealth, holds 3.35 times GDP too: the capital stock, its foreign share and domestically-held debt that the steady state is tuned to imply the same household wealth as the initial-period data.
+The capital-side construction is the model-consistent measure — the model forces $B(0) = K_d(0) + D_d(0)$ — and household-net-worth estimates (UBS Global Wealth Report class, ~2.3–2.6× GDP) sit below it, as expected where surveys undercount real property. The steady state holds more, 3.64 times GDP: an aged population owns more wealth relative to output (see {ref}`Chap_HouseholdCalib`).
 
-**What the early transition gets right and wrong.** The transition starts on the data where the data are anchored: household wealth 3.34 times GDP in 2025 (target 3.35), debt 0.598, the foreign share of capital 22% (IIP about 20%), pension outlays 2.28% and the programmed primary balance. The composition of spending in the first years is the calibration's main remaining miss:
+**How the initial wealth is spread across ages.** The level alone does not set the starting point; OG-Core also needs how that wealth is divided across ages and lifetime-income groups, `initial_hhwealth_dist` (an $S \times J$ matrix of shares of aggregate wealth, available since OG-Core 0.22 and corrected in 0.24.1 to weight each cell by its population). Left unset, OG-Core stretches the steady-state age profile until the aggregate matches the anchor. The Philippine population is young, with fewer of the wealthy older households that profile is built on, so the stretch is large: every household started 1.6 times richer than its steady-state counterpart of the same age, and the older ones consumed the difference (consumption at ages 60–89 was 30–62% above its steady-state level in 2025, and the first year's consumption share 80.8% of GDP against 76.1% in the data).
 
-| | 2025 | 2030 | 2035 | Steady state | Data |
-|---|---|---|---|---|---|
-| Household consumption (purchaser prices) | 80.8% | 73.0% | 70.2% | 77.8% | 76.1% (2024) |
-| Fixed investment, private + public | 20.2% | 26.1% | 26.9% | 23.9% | 23.6% (2024) |
-| Household wealth / GDP | 3.34 | 2.81 | 2.59 | 3.35 | 3.35 (anchor) |
-| Foreign share of capital | 22% | 31% | 34% | 20% | ~20% (IIP) |
+`ogphl/initial_wealth.py` sets the shares from data. The age shape is the National Transfer Accounts' private asset income per person by age for the Philippines, 2015 (the latest year; prepared by Michael Abrigo), which traces wealth by age when the return on assets does not vary much with age: it rises from almost nothing at 20 to a peak at 65–70 and falls after 75, where households draw their wealth down. Within each age, wealth across lifetime-income groups keeps the model's own steady-state pattern, since no Philippine survey reports wealth by lifetime income (the BSP Consumer Finance Survey 2021 reports net worth deciles by the main earner's age group, too coarse to set the shape, but consistent with it: households whose main earner is 15–24 are over-represented in the bottom net-worth deciles, 15.6% of them in the lowest, against 6.6% of those whose main earner is 65 or over). The shape alone did not remove the windfall, because the level is the data's and the steady state, then tuned to today's capital stock, held too little wealth for an aged population. Retuning the discount factor to 2025 (see {ref}`Chap_HouseholdCalib`) resolved it:
 
-The model starts consuming 4.7 points of GDP more than the data and investing 3.4 points less, then swings the other way: over the first decade the working-age population grows fast, the return on capital rises from 8.0% to 9.9%, investment rises above its long-run share, and foreign capital fills a growing part of it while household wealth falls relative to a fast-growing GDP. The likely cause of the first-year gap is how initial wealth is spread across ages. OG-Core scales the steady-state age profile of wealth to hit the aggregate anchor (it has no input for initial wealth by age). The Philippine population is young, with fewer of the wealthy older households the steady-state profile is built on, so hitting the aggregate scales every age up: each household starts with more wealth than its steady-state counterpart of the same age, and consumes some of it. A wealth-by-age anchor from a Philippine household survey is the next refinement; until then, results for the first few years of a transition should be read with this in mind. Before the initial-wealth anchor, the same mechanism produced a 41% one-year jump in consumption; with it, the initial distortion is a few points.
+| | 2025 | 2030 | 2035 | 2040 | Steady state | Data |
+|---|---|---|---|---|---|---|
+| Household consumption (purchaser prices) | 75.1% | 72.3% | 70.9% | 70.5% | 78.6% | 76.1% (2024) |
+| Fixed investment, private + public | 23.8% | 26.9% | 27.2% | 26.8% | 24.4% | 23.6% (2024) |
+| Household wealth / GDP | 3.36 | 3.02 | 2.85 | 2.78 | 3.64 | 3.35 (anchor) |
+| Private capital / GDP | 3.61 | | | | 3.69 | 3.59 (PWT 2023 less public capital) |
+| Foreign share of capital | 20.1% | 24.7% | 26.8% | 27.7% | 14.4% | ~20% (IIP) |
+| Return on capital | 8.3% | 9.1% | 9.5% | 9.6% | 8.0% | |
+
+The first year now sits on the data. Over the next fifteen years the working-age population grows fast, the return on capital rises with it, investment rises above both its 2025 and its long-run share, and foreign capital fills a growing part of it while household wealth falls relative to a fast-growing GDP; as the population ages, wealth rebuilds and the foreign share falls back. That middle stretch is the model's projection of the demographic dividend, not a calibration target. Starting wealth is still older-heavy relative to the steady state at ages 40–79 (1.4–1.9 times), as the NTA profile says it is, and households in their 60s still consume about 46% more than their steady-state counterparts in 2025, which is the measured position of today's older Filipinos rather than an artifact.
 
 ### Fiscal paths against actuals and the program
 
@@ -121,7 +125,7 @@ The model starts consuming 4.7 points of GDP more than the data and investing 3.
 height: 500px
 name: FigFiscalPathsPHL
 ---
-Baseline model transition paths, as shares of GDP at market prices, against actuals (2023–2024) and the national government's fiscal program (2025–2028), from the DBM Budget of Expenditures and Sources of Financing, Table A.2 (FY 2025 edition for 2023, FY 2026 for 2024–2028) and, for end-2024 debt, the Bureau of the Treasury; the data are in `ogphl/data/fiscal_program_PHL.csv` and the figure is drawn by `scripts/plot_fiscal_paths.py`. The primary balance is the deficit less interest. The model lands on the programmed primary balance in all four program years (−2.51, −2.26, −1.59, −1.03% of GDP); over 2029–2044 it runs between −0.31% (2029) and −1.93% (2044), and the budget rule takes over in 2045. Debt starts at 59.8% against the end-2024 actual of 60.7%, peaks at 61.8% in 2028, falls to a trough of 57.1% in 2037 and returns to 60–61.5% from 2044. Revenue is the program's national-government revenue plus a +3.78 point bridge to the model's general-government concept (the 2023 gap between OECD Revenue Statistics and Treasury revenue, mostly social security contributions and local taxes); the 2024 actual is high because it includes one-off non-tax transfers (2.3% of GDP of non-tax revenue, against 0.8–1.1% in other years). Model revenue falls from 19.6% of GDP in 2025 to a low of 18.2% in 2041 while the program's rises to 20.1% by 2028: the program embeds tax-administration gains the calibration holds constant, and transition revenue dips as consumption falls relative to GDP (see the initial household wealth section). Public investment sits on the infrastructure program (5.3, 5.1, 5.1, 5.2% of GDP).
+Baseline model transition paths, as shares of GDP at market prices, against actuals (2023–2024) and the national government's fiscal program (2025–2028), from the DBM Budget of Expenditures and Sources of Financing, Table A.2 (FY 2025 edition for 2023, FY 2026 for 2024–2028) and, for end-2024 debt, the Bureau of the Treasury; the data are in `ogphl/data/fiscal_program_PHL.csv` and the figure is drawn by `scripts/plot_fiscal_paths.py`. The primary balance is the deficit less interest. The model lands within 0.02 points of the programmed primary balance in all four program years (−2.51, −2.26, −1.59, −1.03% of GDP); over 2029–2044 it runs between −0.41% (2029) and −1.75% (2044), and the budget rule takes over in 2045. Debt starts at 60.2% against the end-2024 actual of 60.7%, peaks at 62.1% in 2028, falls to a trough of 57.3% in 2038 and holds at 60–60.6% from 2044. Revenue is the program's national-government revenue plus a +3.78 point bridge to the model's general-government concept (the 2023 gap between OECD Revenue Statistics and Treasury revenue, mostly social security contributions and local taxes); the 2024 actual is high because it includes one-off non-tax transfers (2.3% of GDP of non-tax revenue, against 0.8–1.1% in other years). Model revenue starts at 19.0% of GDP in 2025 (against 19.4% in 2023) and falls to a low of 18.3% in 2041 while the program's rises to 20.1% by 2028: the program embeds tax-administration gains the calibration holds constant, and transition revenue dips as consumption falls relative to GDP during the demographic dividend (see the initial household wealth section). Public investment sits on the infrastructure program (5.3, 5.1, 5.1, 5.2% of GDP).
 ```
 
 ### Government interest rate wedge
@@ -138,38 +142,52 @@ A consequence worth stating plainly: at $r_{gov} = 2.0\%$ real and steady-state 
 
 Centering is what makes the premium usable along the transition. The multi-industry baseline debt path overshoots to about 1.3 times GDP early in the fiscal-adjustment window (period $t_{G1}$) before returning to 0.60, and the centered premium prices that overshoot at a plausible peak sovereign rate near 7.8%. A premium that bit at the target (vertex at zero debt) would instead compound the overshoot into a runaway debt-service feedback — toward ~1.7 and a ~16% rate. It is enabled by default.
 
-## Validation: the steady-state dashboard
+## Validation: the calibration dashboard
 
-Most parameters are only weakly identified on their own, so the real test is whether the steady state they jointly produce resembles the economy. The table compares the solved steady state of the packaged calibration (the shipped example, run from an installed copy) with Philippine data; `examples/tune_ss.py` prints the same rows and `ogphl/targets.py` holds the targets and their sources. Every ratio is to GDP at market prices. The first three blocks are targeted, each by its own parameter; the last block is not, and is the independent check. The return on capital is open-economy latitude rather than a target, and the labor share equals one minus the capital share by construction with Cobb-Douglas production. The early transition, where the first years' consumption and investment shares miss, is scored in the initial household wealth section above; the fiscal paths are in the figure above.
+Most parameters are only weakly identified on their own, so the real test is whether the economy they jointly produce resembles the Philippines. The tables compare the packaged calibration (the shipped example, run from an installed copy) with Philippine data, every ratio to GDP at market prices; `examples/tune_ss.py` prints the same rows (with `--tpi` for the first year) and `ogphl/targets.py` holds the targets and their sources. Each tuned parameter has its own row. Moments describing today's economy (investment, the foreign share of capital, wealth) are scored in 2025, the first year of the transition; the fiscal instruments are scored in the steady state, where their collections and outlays are defined, and their 2025 values sit on the fiscal-path figure above.
 
-| Moment | Model | Data | Gap | Source |
-|---|---|---|---|---|
-| **Fiscal** | | | | |
-| Personal income tax | 3.12% | 3.12% | +0.1% | OECD Revenue Statistics Asia-Pacific 2025, PHL 2023 |
-| Social security contributions | 2.78% | 2.78% | -0.0% | SSC, OECD Revenue Statistics 2025, PHL 2023 |
-| CIT + BTr capital income | 4.19% | 4.20% | -0.2% | CIT 2.90 + BTr income from government capital ~1.00 + unallocable income taxes 0.30 (OECD 2023; BESF) |
-| Consumption taxes + fees | 7.95% | 7.94% | +0.1% | VAT + excises + customs 7.39 (OECD 2023) + fees and charges 0.55 (BESF non-tax) |
-| Property-type taxes | 1.33% | 1.32% | +0.8% | property-type taxes: RPT, DST, LGU levies (OECD 'other taxes' less estate) |
-| Estate and donor taxes | 0.07% | 0.07% | +0.6% | estate tax collections, BIR |
-| Transfers | 4.48% | 4.48% | -0.0% | alpha_T: social transfers, DBM/BESF |
-| Public investment | 5.20% | 5.20% | -0.0% | alpha_I: public infrastructure program, MTFF/BESF |
-| Pension outlays | 6.97% | 6.97% | +0.0% | today's 2.28% (SSS 1.06% 2023, GSIS 0.68% 2024, MUP fund 0.54% 2024 GAA) x 3.056, the rise in covered retirees per worker to the steady state (a mature system in the long-run population) |
-| Government debt (anchor) | 0.60 | 0.60 | -0.0% | debt_ratio_ss: MTFF program anchor |
-| Real rate on government debt | 2.00% | 2.00% | -0.1% | BTr FY2024: interest P763.3bn on ~P15.3tn average debt, less ~3% expected inflation |
-| **External** | | | | |
-| Foreign share of capital | 19.97% | 20.00% | -0.2% | BSP International Investment Position, inward share |
-| Personal remittances | 8.12% | 8.12% | -0.0% | BSP 2025 personal remittances US$39.62bn (BPM6), the household income measure; the published 7.3% ratio is the narrower cash measure |
-| **Production and saving** | | | | |
-| Private capital | 3.59 | 3.59 | -0.1% | PWT 11 capital stock 2023 (3.97) less public capital ~0.38 (IMF ICSD); delta and beta are set to it |
-| **Untargeted checks** | | | | |
-| Fixed investment, private + public | 23.86% | 23.6% | | World Bank WDI 2024 (gross fixed capital formation) |
-| Household consumption, purchaser prices | 77.78% | 76.1% | | World Bank WDI 2024 |
-| Government consumption (budget residual) | 3.15% | 14.6% | | WDI 2024; the steady state sets G from the budget identity |
-| Net exports (resource-constraint residual) | -4.79% | | | not a modelled trade sector |
-| Household wealth | 3.35 | 3.35 | | initial-wealth construction, macro chapter |
-| Total revenue | 19.44% | 19.43% | | OECD 2023 + captured non-tax (sum of the rows above) |
-| Return on capital r | 8.32% | | | ballpark tier: open-economy latitude |
-| Labor share of Y | 48.5% | 48.5% | | ILO 2023 x 1.086; equal to 1-gamma by construction at epsilon = 1 |
-| Steady-state population growth | -0.56% | | | UN WPP terminal value (the steady state uses the end of the projection, not today's growth) |
+**The first year, 2025.** The discount factor and the foreign-capital share are tuned here; household wealth and capital follow from the initial-wealth anchor.
+
+| Moment, 2025 | Model | Data | Source |
+|---|---|---|---|
+| Fixed investment | 23.8% | 23.6% | gross fixed capital formation, World Bank WDI 2024; beta |
+| Foreign share of capital | 20.1% | 20.0% | BSP International Investment Position, inward share; zeta_K |
+| Household wealth / GDP | 3.36 | 3.35 | initial_wealth_ratio construction (anchor) |
+| Private capital / GDP | 3.61 | 3.59 | PWT 11 capital stock 2023 (3.97) less public capital ~0.38 (IMF ICSD); set by the initial wealth anchor and the foreign share |
+| Household consumption, purchaser prices | 75.1% | 76.1% | World Bank WDI 2024 (untargeted) |
+| Pension outlays | 2.27% | 2.28% | SSS, GSIS, uniformed pensions (phase-in) |
+| Primary balance | −2.49% | −2.51% | BESF FY2026 Table A.2 (spending path) |
+
+**The steady state.** The fiscal instruments are tuned to their collections and outlays here.
+
+| Moment, steady state | Model | Data | Source |
+|---|---|---|---|
+| Personal income tax | 3.13% | 3.12% | OECD Revenue Statistics Asia-Pacific 2025, PHL 2023 |
+| Social security contributions | 2.78% | 2.78% | SSC, OECD Revenue Statistics 2025, PHL 2023 |
+| CIT + government capital income | 4.21% | 4.20% | CIT 2.90 + BTr income from government capital ~1.00 + unallocable income taxes 0.30 (OECD 2023; BESF) |
+| Consumption taxes + fees | 7.97% | 7.94% | VAT + excises + customs 7.39 (OECD 2023) + fees and charges 0.55 (BESF non-tax) |
+| Property-type taxes | 1.31% | 1.32% | property-type taxes: RPT, DST, LGU levies (OECD 'other taxes' less estate) |
+| Estate and donor taxes | 0.07% | 0.07% | estate tax collections, BIR |
+| Real rate on government debt | 2.01% | 2.00% | BTr FY2024: interest P763.3bn on ~P15.3tn average debt, less ~3% expected inflation |
+| Government debt (anchor) | 0.60 | 0.60 | debt_ratio_ss: MTFF program anchor |
+| Transfers | 4.48% | 4.48% | alpha_T: social transfers, DBM/BESF |
+| Public investment | 5.20% | 5.20% | alpha_I: public infrastructure program, MTFF/BESF |
+| Pension outlays (mature system) | 6.98% | 6.97% | today's 2.28% (SSS 1.06% 2023, GSIS 0.68% 2024, MUP fund 0.54% 2024 GAA) x 3.056, the rise in covered retirees per worker to the steady state (a mature system in the long-run population) |
+| Personal remittances | 8.12% | 8.12% | BSP 2025 personal remittances US$39.62bn (BPM6), the household income measure; the published 7.3% ratio is the narrower cash measure |
+
+**Untargeted, steady state.**
+
+| Moment | Model | Comparison |
+|---|---|---|
+| Private capital / GDP | 3.69 | 3.59 today; higher in an aged population |
+| Foreign share of capital | 14.4% | 20% today |
+| Household wealth / GDP | 3.64 | 3.35 today |
+| Fixed investment | 24.4% | 23.6% today |
+| Household consumption | 78.6% | 76.1% today |
+| Government consumption (budget residual) | 3.2% | 14.6% today |
+| Net exports (resource-constraint residual) | −6.1% | not a modelled trade sector |
+| Total revenue | 19.46% | 19.43% (sum of the instruments) |
+| Return on capital | 8.0% | open-economy latitude |
+| Labor share of output | 48.5% | ILO 2023 × 1.086, equal by construction |
 
 Hours worked by age are scored separately in {ref}`Chap_HouseholdCalib`: the model is within 1–2% of the Labor Force Survey at every five-year band from 25 to 69.

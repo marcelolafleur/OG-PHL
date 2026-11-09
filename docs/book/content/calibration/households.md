@@ -13,13 +13,11 @@ The default value for the intertemporal elasticity of substitution, $\sigma$, is
 
 ### Rate of time preference
 
-The rate of time preference $\beta$ is tuned rather than sourced: it is the one parameter that sets how much Philippine households save, and so how much capital the economy holds. We set $\beta=0.8895$ (annual, the same for every lifetime-income group) so that the steady state's private capital stock equals the data: 3.59 times GDP, the Penn World Table 11 total capital stock for 2023 (3.97 times GDP) less public capital of about 0.38 times GDP (IMF Investment and Capital Stock Dataset). With the foreign share of capital at the BSP International Investment Position's 20% and 80% of government debt held domestically, the same steady state puts household wealth at 3.35 times GDP, matching the 3.35 used to anchor initial wealth (see {ref}`Chap_MacroCalib`), although household wealth is not targeted. All ratios are to GDP at market prices (see the macro chapter).
+The rate of time preference $\beta$ is tuned rather than sourced: it is the one parameter that sets how much Philippine households save. We set $\beta=0.9027$ (annual, the same for every lifetime-income group) so that fixed investment in the first year of the transition, 2025, is 23.6% of GDP, the national accounts' share (World Bank, 2024). Household wealth in that year is anchored to data (3.35 times GDP, spread across ages by the National Transfer Accounts; see {ref}`Chap_MacroCalib`), so $\beta$ sets how much of the year's income households save on top of it.
 
-The value has moved twice. The US default from {cite}`Carroll:2009`, 0.96, paired with a US depreciation rate, left the Philippine steady state holding 4.4 times GDP in capital, investing 38% of GDP and consuming 58%. A first recalibration to 0.846 matched the capital stock, but against the model's output rather than market-price GDP, and with a capital share that counted product taxes as capital income. On the corrected basis the economy needs more capital relative to the model's output, and with the lower ILO capital share (51.5% total, {ref}`Chap_FirmCalib`) each unit of capital earns less, so households must be more patient to hold it: hence 0.8895.
+$\beta$ is tuned to 2025 rather than to the steady state because the data describe today's population. The Philippine population is young (14% of adults over 60 in 2025 against 31% in the steady state), and older households hold more wealth, so the same patience implies more wealth relative to GDP once the population has aged. Tuning $\beta$ so the steady state held today's capital stock (an earlier version of this calibration) made households too impatient for today: starting from measured wealth, they saved too little and the first year's consumption share came out at 80.8% of GDP against 76.1%. Tuned to 2025, the first year has household consumption at 75.1% of GDP, investment at 23.8%, capital at 3.61 times GDP against the Penn World Table's 3.59 (2023, less public capital), and the foreign share of capital at the IIP's 20%. The steady state then holds 3.69 times GDP in private capital and 3.64 in household wealth, more than today, as an aging population should; it invests 24.4% of GDP and consumes 78.6%. All ratios are to GDP at market prices (see the macro chapter).
 
-The steady state invests 23.9% of GDP, against 23.6% in the national accounts (2024, World Bank), and household consumption is 77.8% of GDP against 76.1%. Neither is a target; they are the independent check that the capital level, the depreciation rate and the capital share are right together. Investment moved onto the data with the corrected basis (from 22.1% before, when the capital stock was 7.6% short on the market-price basis); consumption stays 1.7 points high, the counterpart of net exports of −4.8% of GDP in the model's resource constraint. These shares are of market-price GDP, with consumption at purchaser prices. The value is tuned with the rest of the calibration in place (public pensions, the NTA age shape of earnings, the calibrated hours profile, income gradients in fertility and mortality), since each of them changes how much households save.
-
-The implied real return to capital is 8.3%, below OG-ZAF's 11.0% for South Africa; the difference is mostly the capital share, 51.5% here on the model's factor-income basis.
+The US default from {cite}`Carroll:2009`, 0.96, paired with a US depreciation rate, left the Philippine steady state holding 4.4 times GDP in capital, investing 38% of GDP and consuming 58%. The implied real return to capital is 8.3% in 2025 and 8.0% in the steady state, below OG-ZAF's 11.0% for South Africa; the difference is mostly the capital share, 51.5% here on the model's factor-income basis.
 
 ### Disutility of labor by age
 
@@ -31,18 +29,18 @@ The calibration (`python -m ogphl.labor`) solves the steady state repeatedly. Be
 
 | Ages | Survey, hours per person per week | Model steady state |
 |---|---|---|
-| 20–24 | 16.1 | 17.0 |
-| 25–29 | 28.8 | 29.2 |
-| 30–34 | 31.8 | 32.1 |
-| 35–39 | 32.4 | 32.8 |
-| 40–44 | 33.2 | 33.6 |
-| 45–49 | 32.9 | 33.3 |
-| 50–54 | 31.8 | 32.2 |
-| 55–59 | 28.7 | 29.1 |
-| 60–64 | 22.8 | 23.2 |
-| 65–69 | 12.7 | 12.9 |
-| 70–79 | 6.0 | 8.3 |
-| 80–99 | 2.2 | 7.0 |
+| 20–24 | 16.1 | 16.8 |
+| 25–29 | 28.8 | 29.0 |
+| 30–34 | 31.8 | 32.0 |
+| 35–39 | 32.4 | 32.7 |
+| 40–44 | 33.2 | 33.5 |
+| 45–49 | 32.9 | 33.2 |
+| 50–54 | 31.8 | 32.1 |
+| 55–59 | 28.7 | 28.9 |
+| 60–64 | 22.8 | 23.0 |
+| 65–69 | 12.7 | 12.7 |
+| 70–79 | 6.0 | 8.2 |
+| 80–99 | 2.2 | 6.9 |
 
 The weights are 240–510 at prime ages against 20–25 in OG-USA. At ages 20–21 and from about 77 on they sit at OG-Core's upper bound of 10,000, where the target cannot be reached, so those ages are left out of the fit: the youngest work slightly more than the survey and the oldest about five hours a week more than the extrapolated target. The level of labor supply roughly halves, which the model absorbs through the `factor` that converts model units to pesos.
 
